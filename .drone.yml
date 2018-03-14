@@ -1,0 +1,11 @@
+---
+pipeline:
+  docker:
+    image: docker
+    pull: true
+    environment:
+      - http_proxy=http://192.168.0.2:3128
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - docker image build --pull -t theasp/logview .

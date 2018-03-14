@@ -1,0 +1,5 @@
+target
+repo
+.git
+node_modules
+Dockerfile*

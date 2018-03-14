@@ -1,0 +1,15 @@
+FROM theasp/clojurescript-nodejs:shadow-cljs-alpine as build
+WORKDIR /app
+RUN apk --no-cache add python alpine-sdk postgresql-dev
+COPY package.json package-lock.json shadow-cljs.edn /app/
+RUN shadow-cljs npm-deps && npm install --save-dev shadow-cljs
+COPY ./ /app
+RUN shadow-cljs release client server
+
+FROM node:alpine
+WORKDIR /app
+ENV DB_NAME="logview" DB_HOST="postgres" DB_USER="logview" DB_PASSWORD="logview" WEB_FQDN="logview.example.com" HTTP_PORT="80"
+EXPOSE 80
+CMD ["./run-server.sh"]
+RUN apk --no-cache add libpq bash
+COPY --from=build /app/ /app/
