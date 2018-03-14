@@ -1,0 +1,26 @@
+---
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: lapidary
+      POSTGRES_USER: lapidary
+      POSTGRES_PASSWORD: lapidary
+
+  lapidary:
+    # replace username/repo:tag with your name and image details
+    image: theasp/lapidary
+    restart: always
+    ports:
+      - "3011:80"
+    environment:
+      DB_HOST: db
+      DB_USER: lapidary
+      DB_PASSWORD: lapidary
+      DB_NAME: lapidary
+    depends_on:
+      - db
