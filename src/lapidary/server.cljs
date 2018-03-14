@@ -8,7 +8,7 @@
    [lapidary.server.web-handler :refer [new-web-handler]]
    [lapidary.server.pg-pool :as pg-pool]
    [lapidary.server.api :as api]
-   [lapidary.server.pg-notify :as pg-notify]
+   [lapidary.server.pg-schema :as pg-schema]
    [taoensso.timbre :as timbre
     :refer-macros [tracef debugf infof warnf errorf]])
   (:require-macros
@@ -72,6 +72,7 @@
   (component/system-map
    :config config
    :state (atom nil)
+   :pg-schema (pg-schema/new-pg-schema)
    :database (pg-pool/new-pg-pool)
    :api (api/new-api-handler)
    :web-handler (new-web-handler)))
