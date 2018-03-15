@@ -18,26 +18,42 @@
     (doseq [migration migrations]
       (infof "%s" (:filename migration)))))
 
-(defrecord PgSchema [config]
+(defn make-config [{:keys [user password host port db pool-size]}]
+  {:hostname  host
+   :port      port
+   :database  db
+   :username  user
+   :password  password
+   :pool-size pool-size})
+
+(defrecord PgSchema [config database]
   component/Lifecycle
   (start [this]
     (infof "Running")
-    (let [db (:db config)]
-      (-> #js {:migrationDirectory "resources/postgrator"
-               :driver             "pg"
-               :schemaTable        "postgrator.schemaversion"
-               :host               (:host db)
-               :port               (:port db)
-               :database           (:db db)
-               :username           (:user db)
-               :password           (:password db)}
-          (postgrator.)
-          (.migrate)
-          (.then log-migrations)
-          (.catch (fn [error]
-                    (log-migrations (.-appliedMigrations error))
-                    (errorf "DB migration failure: %s" error)
-                    (nodejs/process.exit 1))))
+    (let [db          (:db config)
+          conn-config (make-config db)
+          pg          (pg/open-db conn-config)]
+      (debugf "Conn: %s" conn-config)
+      (go (debugf "Creating schema")
+          (when-let [conn (<! (pg/connect! pg))]
+            (<! (pg/execute! pg ["CREATE SCHEMA IF NOT EXISTS postgrator;"]))
+            (.end pg))
+
+          (-> #js {:migrationDirectory "resources/postgrator"
+                   :driver             "pg"
+                   :schemaTable        "postgrator.schemaversion"
+                   :host               (:host db)
+                   :port               (:port db)
+                   :database           (:db db)
+                   :username           (:user db)
+                   :password           (:password db)}
+              (postgrator.)
+              (.migrate)
+              (.then log-migrations)
+              (.catch (fn [error]
+                        (log-migrations (.-appliedMigrations error))
+                        (errorf "DB migration failure: %s" error)
+                        (nodejs/process.exit 1)))))
 
       (assoc this :db db)))
 
