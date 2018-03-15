@@ -61,8 +61,8 @@
 
 
 (defn sql-execute! [sql jwt ok-fn error-fn]
-  #_(debugf "QUERY: %s" (first sql))
-  #_(debugf "ARGS: %s" (rest sql))
+  ;; (debugf "QUERY: %s" (first sql))
+  ;; (debugf "ARGS: %s" (rest sql))
   (ajax/POST (str base-url "/api/query")
              {:headers         {:Authorization (str "Bearer " (:token jwt))}
               :params          {:execute sql}
@@ -73,8 +73,9 @@
               :keywords?       true}))
 
 (defn sql-transaction! [sql jwt ok-fn error-fn]
-  #_(debugf "QUERY: %s" (first sql))
-  #_(debugf "ARGS: %s" (rest sql))
+  ;; (debugf "TRANSACTION:")
+  ;; (doseq [transaction sql]
+  ;;   (debugf "TX QUERY: %s %s" (first sql) (rest sql)))
   (ajax/POST (str base-url "/api/query")
              {:headers         {:Authorization (str "Bearer " (:token jwt))}
               :params          {:transaction sql}
@@ -101,7 +102,7 @@
 
 (defn create-log-table [table-name jwt ok-fn error-fn]
   ;; TODO: Make sure table-name does't suck
-  (-> [(sql/sql (sql/create-table db (keyword "public" table-name)
+  (-> [(sql/sql (sql/create-table db (keyword (str "public." table-name))
                                   (sql/column :id :serial :not-null? true :primary-key? true)
                                   (sql/column :tag :text)
                                   (sql/column :time :timestamptz)
