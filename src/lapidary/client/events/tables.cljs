@@ -14,22 +14,18 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn tables-refresh [db _]
+(defn tables-refresh [{:keys [db]} _]
   (when (and (not (:tables-loading? db))
              (utils/expired? (:tables-time db) (js/Date.now) (* 30 1000)))
-    #_(debugf "Refreshing tables")
-    (rf/dispatch [:tables-load]))
-  db)
+    {:dispatch [:tables-load]}))
 
-(defn tables-load [db _]
-  (if (and (not (:tables-loading? db))
-           (db/login-ok? db))
-    (do
-      (api/get-tables! (get-in db [:login :jwt])
-                       #(rf/dispatch [:tables-load-ok (-> % :result :rows walk/keywordize-keys)])
-                       #(rf/dispatch [:tables-load-error %]))
-      (assoc db :tables-loading? true))
-    db))
+(defn tables-load [{:keys [db]} _]
+  (when (and (not (:tables-loading? db))
+             (db/login-ok? db))
+    (api/get-tables! (get-in db [:login :jwt])
+                     #(rf/dispatch [:tables-load-ok (-> % :result :rows walk/keywordize-keys)])
+                     #(rf/dispatch [:tables-load-error %]))
+    {:db (assoc db :tables-loading? true)}))
 
 (defn result->searches [searches]
   (reduce searches/add-search {} searches))
@@ -58,28 +54,29 @@
   (router/navigate! :lapidary/query-table {:table table} options)
   nil)
 
-(defn tables-create [db [_ name]]
+(defn tables-create [{:keys [db]} [_ name]]
   (when (and (db/table-name-ok? name))
-    (do
-      (api/create-log-table name (get-in db [:login :jwt])
-                            #(rf/dispatch [:tables-create-ok name %])
-                            #(rf/dispatch [:tables-create-error name %]))
-      {:db (assoc db :tables-creating? true)})))
+    (api/create-log-table name (get-in db [:login :jwt])
+                          #(rf/dispatch [:tables-create-ok name %])
+                          #(rf/dispatch [:tables-create-error name %]))
+    {:db (assoc db :tables-creating? true)}))
 
 (defn tables-create-ok [db [_ name result]]
+  (debugf "tables-create: %s" result)
   (merge db {:tables-creating?    false
              :tables-create-error nil}))
 
 (defn tables-create-error [db [_ name result]]
+  (debugf "tables-create: %s" result)
   (merge db {:tables-creating?    false
              :tables-create-error result}))
 
 (rf/reg-event-fx :tables-init tables-init)
-(rf/reg-event-db :tables-load tables-load)
+(rf/reg-event-fx :tables-load tables-load)
 (rf/reg-event-db :tables-load-ok tables-load-ok)
 (rf/reg-event-db :tables-load-error tables-load-error)
-(rf/reg-event-db :tables-refresh tables-refresh)
+(rf/reg-event-fx :tables-refresh tables-refresh)
 (rf/reg-event-fx :tables-query tables-query)
-(rf/reg-event-db :tables-create tables-create)
+(rf/reg-event-fx :tables-create tables-create)
 (rf/reg-event-db :tables-create-ok tables-create-ok)
 (rf/reg-event-db :tables-create-error tables-create-error)

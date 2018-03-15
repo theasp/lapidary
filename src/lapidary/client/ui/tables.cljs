@@ -42,8 +42,17 @@
 
 (defn new-table-card [state]
   (let [name     (:name @state)
-        name-ok? (db/table-name-ok? name)]
-    [:div.hero.is-light.is-rounded
+        name-ok? (db/table-name-ok? name)
+        submit   (if name-ok?
+                   (fn [e]
+                     (debugf "DISPATCHING")
+                     (rf/dispatch [:tables-create name])
+                     (reset! state nil)
+                     (.preventDefault e))
+                   (fn [e]
+                     (.preventDefault e)))]
+    [:form.hero.is-light.is-rounded
+     {:on-submit submit}
      [:div
       [:button.delete.is-pulled-right
        {:on-click #(reset! state nil)}]]
@@ -54,12 +63,14 @@
          {:class       (str "input" (when-not name-ok? " is-danger"))
           :placeholder "Name..."
           :on-change   #(swap! state assoc :name (-> % .-target .-value str/lower-case))
+          :auto-focus  true
           :value       name}]]]
       [:div.field.has-text-centered
        [:div.control.has-text-right
-        [:a.button.is-primary
-         {:disabled (not name-ok?)
-          :on-click #(rf/dispatch [:create-table])}
+        [:button.button.is-primary
+         {:disabled (not name-ok?)}
+         [:span.icon
+          [:span.fas.fa-plus]]
          [:span "Create"]]]]]]))
 
 (defn hidden-new-table [state]
