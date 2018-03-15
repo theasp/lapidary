@@ -107,18 +107,22 @@
 (def parse-int str->int)
 
 (defn byte-size-str [size]
-  (loop [size   (if (string? size) (str->int size) size)
+  (loop [size   (if (number? size) size (str->int (str size)))
          labels ["B" "KiB" "MiB" "GiB" "TiB" "PiB" "EiB" "ZiB" "YiB"]]
     (if (> size 1024)
       (recur (/ size 1024) (rest labels))
-      (goog.string.format "%0.1f %s" size (first labels)))))
+      (if-let [label (first labels)]
+        (goog.string.format "%0.1f %s" size label)
+        (goog.string.format "%d" size)))))
 
 (defn si-size-str [size]
-  (loop [size   (if (string? size) (str->int size) size)
-         labels ["" "K" "M" "G" "T" "P" "E" "Z" "Y"]]
+  (loop [size   (if (number? size) size (str->int (str size)))
+         labels [nil "K" "M" "G" "T" "P" "E" "Z" "Y"]]
     (if (> size 1000)
       (recur (/ size 1000) (rest labels))
-      (goog.string.format "%0.1f %s" size (first labels)))))
+      (if-let [label (first labels)]
+        (goog.string.format "%0.1f %s" size label)
+        (goog.string.format "%d" size)))))
 
 ;; https://gist.github.com/danielpcox/c70a8aa2c36766200a95
 (defn deep-merge [v & vs]
