@@ -24,5 +24,6 @@ export WEB_FQDN=${WEB_FQDN:-lapidary}
 export WEB_ROOT=${WEB_ROOT:-""}
 
 export COOKIE_SECRET=${COOKIE_SECRET:-$(head -c 8 /dev/urandom | hexdump -ve '1/1 "%.2x"')}
+export JWT_SECRET=${JWT_SECRET:-$(head -c 8 /dev/urandom | hexdump -ve '1/1 "%.2x"')}
 
 exec node target/private/js/server.js
