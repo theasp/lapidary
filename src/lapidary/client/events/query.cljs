@@ -140,16 +140,16 @@
 
     db))
 
-(defn query-load-error [db [_ table query-id result]]
-  (debugf "query-load-error: %s" table result)
-  (if (= query-id (get-in db [:query table :id]))
-    (update-in db [:query table] merge
-               {:logs     nil
-                :fields   nil
-                :time     (js/Date.now)
-                :loading? false
-                :error    result})
-    db))
+(defn query-load-error [{:keys [db]} [_ table query-id error]]
+  (errorf "query-load-error: %s" table error)
+  (when (= query-id (get-in db [:query table :id]))
+    {:dispatch (if (= 403 (:status error))
+                 [:jwt-expired]
+                 [:api-error :query-load error])
+     :db       (update-in db [:query table] merge
+                          {:time     (js/Date.now)
+                           :loading? false
+                           :error    error})}))
 
 (defn query-page-next [db [_ table]]
   (let [{:keys [page pages]} (get-in db [:query table])]
@@ -296,8 +296,6 @@
   db)
 
 (defn query-saved-load [db [_ table name]]
-  #_(debugf "query-saved-load: %s" [table name])
-  #_(debugf "query: %s" (get-in db [:query table :searches :saved name]))
   (router/query-navigate! table
                           (merge (get-in db [:view :query])
                                  (get-in db [:query table :searches :saved name])))
@@ -307,7 +305,7 @@
 (rf/reg-event-fx :query-refresh query-refresh)
 (rf/reg-event-fx :query-load query-load)
 (rf/reg-event-db :query-load-ok query-load-ok)
-(rf/reg-event-db :query-load-error query-load-error)
+(rf/reg-event-fx :query-load-error query-load-error)
 (rf/reg-event-db :query-fields-visible query-fields-visible)
 (rf/reg-event-db :query-expand-log query-expand-log)
 (rf/reg-event-db :query-sort-reverse query-sort-reverse)

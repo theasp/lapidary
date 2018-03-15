@@ -40,12 +40,14 @@
              :tables-loading? false
              :tables-error    nil}))
 
-(defn tables-load-error [db [_ error]]
-  #_(debugf "tables-load-error: %s" error)
-  (merge db {:tables          nil
-             :tables-time     (js/Date.now)
-             :tables-loading? false
-             :tables-error    error}))
+(defn tables-load-error [{:keys [db]} [_ error]]
+  (debugf "tables-load-error: %s" error)
+  {:dispatch (if (= 403 (:status error))
+               [:jwt-expired]
+               [:api-error :tables-load error])
+   :db       (merge db {:tables-time     (js/Date.now)
+                        :tables-loading? false
+                        :tables-error    error})})
 
 (defn tables-init [cofx _]
   {:dispatch [:tables-refresh]})
@@ -62,21 +64,25 @@
     {:db (assoc db :tables-creating? true)}))
 
 (defn tables-create-ok [db [_ name result]]
-  (debugf "tables-create: %s" result)
-  (merge db {:tables-creating?    false
-             :tables-create-error nil}))
+  (-> db
+      (update :tables conj {:table_name name})
+      (merge {:tables-creating?    false
+              :tables-create-error nil})))
 
-(defn tables-create-error [db [_ name result]]
-  (debugf "tables-create: %s" result)
-  (merge db {:tables-creating?    false
-             :tables-create-error result}))
+(defn tables-create-error [{:keys [db]} [_ name error]]
+  (errorf "tables-create-error: %s %s" name error)
+  {:db       (merge db {:tables-creating?    false
+                        :tables-create-error error})
+   :dispatch (if (= 403 (:status error))
+               [:jwt-expired]
+               [:api-error :tables-create error])})
 
 (rf/reg-event-fx :tables-init tables-init)
 (rf/reg-event-fx :tables-load tables-load)
 (rf/reg-event-db :tables-load-ok tables-load-ok)
-(rf/reg-event-db :tables-load-error tables-load-error)
+(rf/reg-event-fx :tables-load-error tables-load-error)
 (rf/reg-event-fx :tables-refresh tables-refresh)
 (rf/reg-event-fx :tables-query tables-query)
 (rf/reg-event-fx :tables-create tables-create)
 (rf/reg-event-db :tables-create-ok tables-create-ok)
-(rf/reg-event-db :tables-create-error tables-create-error)
+(rf/reg-event-fx :tables-create-error tables-create-error)

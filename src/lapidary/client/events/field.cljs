@@ -73,15 +73,13 @@
                   :loading? false}))
     db))
 
-(defn field-load-error [db [_ table field id result]]
-  #_(debugf "field-load-error: %s" result)
-  (if (= id (get-in db [:query table :field-values field :id]))
-    (update-in db [:query table :field-values field] merge
-               {:values   nil
-                :error    result
-                :time     (js/Date.now)
-                :loading? false})
-    db))
+(defn field-load-error [{:keys [db]} [_ table field id error]]
+  (errorf "field-load-error: %s %s %s" table field error)
+  (when (= id (get-in db [:query table :field-values field :id]))
+    {:dispatch (if (= 403 (:status error))
+                 [:jwt-expired]
+                 [:api-error :field-load error])
+     :db       db}))
 
 (defn field-refresh [{:keys [db]} [_ table field]]
   (let [{:keys [time loading?]} (get-in db [:query table :field-values field])]
@@ -107,6 +105,6 @@
 (rf/reg-event-fx :field-init field-init)
 (rf/reg-event-fx :field-refresh field-refresh)
 (rf/reg-event-db :field-load-ok field-load-ok)
-(rf/reg-event-db :field-load-error field-load-error)
+(rf/reg-event-fx :field-load-error field-load-error)
 (rf/reg-event-db :field-page field-page)
 (rf/reg-event-db :field-all-values field-all-values)

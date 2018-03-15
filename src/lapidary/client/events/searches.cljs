@@ -85,15 +85,14 @@
                 :error    nil})
     db))
 
-(defn searches-load-error [db [_ id table result]]
-  #_(debugf "searches-load-error: %s" result)
-  (if (= id (get-in db [:query table :searches :id]))
-    (update-in db [:query table :searches] merge
-               {:saved    nil
-                :time     (js/Date.now)
-                :loading? false
-                :error    result})
-    db))
+(defn searches-load-error [{:keys [db]} [_ id table error]]
+  #_(debugf "searches-load-error: %s" error)
+  (when (= id (get-in db [:query table :searches :id]))
+    {:dispatch (when (= 403 (:status error)) [:jwt-expired])
+     :db       (update-in db [:query table :searches] merge
+                          {:time     (js/Date.now)
+                           :loading? false
+                           :error    error})}))
 
 (defn search->json [search]
   (-> search
@@ -111,21 +110,23 @@
       (api/save-search! table name options (get-in db [:login :jwt])
                         #(rf/dispatch [:searches-save-ok table name options])
                         #(rf/dispatch [:searches-save-error table name %]))
-      {}
-      #_{:db (assoc-in db [:query table :searches :saved name] options)})))
+      {})))
 
 (defn searches-save-ok [db [_ table name options result]]
   (assoc-in db [:query table :searches :saved name] options))
 
-(defn searches-save-error [db [_ table name result]]
-  (errorf "searches-save: %s" result)
-  (update-in db [:query table :searches :saved] dissoc name))
+(defn searches-save-error [{:keys [db]} [_ table name error]]
+  (errorf "searches-save: %s %s %s" table name error)
+  {:dispatch (if (= 403 (:status error))
+               [:jwt-expired]
+               [:api-error :searches-save error])
+   :db       (update-in db [:query table :searches :saved] dissoc name)})
 
 (rf/reg-event-fx :searches-refresh searches-refresh)
 (rf/reg-event-fx :searches-load searches-load)
 (rf/reg-event-db :searches-load-ok searches-load-ok)
-(rf/reg-event-db :searches-load-error searches-load-error)
+(rf/reg-event-fx :searches-load-error searches-load-error)
 
 (rf/reg-event-fx :searches-save searches-save)
 (rf/reg-event-db :searches-save-ok searches-save-ok)
-(rf/reg-event-db :searches-save-error searches-save-error)
+(rf/reg-event-fx :searches-save-error searches-save-error)

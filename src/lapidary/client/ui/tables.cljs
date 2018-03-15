@@ -45,7 +45,6 @@
         name-ok? (db/table-name-ok? name)
         submit   (if name-ok?
                    (fn [e]
-                     (debugf "DISPATCHING")
                      (rf/dispatch [:tables-create name])
                      (reset! state nil)
                      (.preventDefault e))
