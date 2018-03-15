@@ -22,25 +22,22 @@
   component/Lifecycle
   (start [this]
     (infof "Running")
-    (let [db         (:db config)
-          migration  (new postgrator #js
-                          {:migrationDirectory "resources/postgrator"
-                           :driver             "pg"
-                           :host               (:host db)
-                           :port               (:port db)
-                           :database           (:db db)
-                           :username           (:user db)
-                           :password           (:password db)})
-          on-success log-migrations
-          on-error   (fn [error]
-                       (log-migrations (.-appliedMigrations error))
-                       (errorf "DB migration failure: %s" error)
-                       (nodejs/process.exit 1))]
-
-      (-> migration
+    (let [db (:db config)]
+      (-> #js {:migrationDirectory "resources/postgrator"
+               :driver             "pg"
+               :schemaTable        "postgrator.schemaversion"
+               :host               (:host db)
+               :port               (:port db)
+               :database           (:db db)
+               :username           (:user db)
+               :password           (:password db)}
+          (postgrator.)
           (.migrate)
-          (.then on-success)
-          (.catch on-error))
+          (.then log-migrations)
+          (.catch (fn [error]
+                    (log-migrations (.-appliedMigrations error))
+                    (errorf "DB migration failure: %s" error)
+                    (nodejs/process.exit 1))))
 
       (assoc this :db db)))
 
