@@ -42,9 +42,7 @@
 
 (defn tables-load-error [{:keys [db]} [_ error]]
   (debugf "tables-load-error: %s" error)
-  {:dispatch (if (= 403 (:status error))
-               [:jwt-expired]
-               [:api-error :tables-load error])
+  {:dispatch [:http-error :tables-load error]
    :db       (merge db {:tables-time     (js/Date.now)
                         :tables-loading? false
                         :tables-error    error})})
@@ -73,9 +71,7 @@
   (errorf "tables-create-error: %s %s" name error)
   {:db       (merge db {:tables-creating?    false
                         :tables-create-error error})
-   :dispatch (if (= 403 (:status error))
-               [:jwt-expired]
-               [:api-error :tables-create error])})
+   :dispatch [:http-error :tables-create error]})
 
 (rf/reg-event-fx :tables-init tables-init)
 (rf/reg-event-fx :tables-load tables-load)

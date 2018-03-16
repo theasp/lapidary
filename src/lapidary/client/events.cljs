@@ -8,6 +8,7 @@
    [lapidary.client.events.field :as field]
    [lapidary.client.events.searches :as searches]
    [lapidary.client.events.login :as login]
+   [lapidary.client.events.error :as error]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
    [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
@@ -55,14 +56,6 @@
         (rf/dispatch [:field-init table field]))))
   (assoc db :view new-view))
 
-(defn jwt-expired [{:keys [db]} _]
-  (when-not (get-in db [:login :loading?])
-    (if (db/login-ok? db)
-      {:dispatch [:login (get-in db [:login :username]) (get-in db [:login :password])]
-       :db       (update db :login merge {:jwt nil})}
-      {:db (update db :login merge {:jwt nil})})))
-
 (rf/reg-event-fx :initialize initialize)
 (rf/reg-event-db :view-update view-update)
 (rf/reg-event-fx :refresh refresh)
-(rf/reg-event-fx :jwt-expired jwt-expired)

@@ -88,7 +88,7 @@
 (defn searches-load-error [{:keys [db]} [_ id table error]]
   #_(debugf "searches-load-error: %s" error)
   (when (= id (get-in db [:query table :searches :id]))
-    {:dispatch (when (= 403 (:status error)) [:jwt-expired])
+    {:dispatch [:http-error :searches-load error]
      :db       (update-in db [:query table :searches] merge
                           {:time     (js/Date.now)
                            :loading? false
@@ -117,9 +117,7 @@
 
 (defn searches-save-error [{:keys [db]} [_ table name error]]
   (errorf "searches-save: %s %s %s" table name error)
-  {:dispatch (if (= 403 (:status error))
-               [:jwt-expired]
-               [:api-error :searches-save error])
+  {:dispatch [:http-error :searches-save error]
    :db       (update-in db [:query table :searches :saved] dissoc name)})
 
 (rf/reg-event-fx :searches-refresh searches-refresh)

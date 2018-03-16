@@ -143,9 +143,7 @@
 (defn query-load-error [{:keys [db]} [_ table query-id error]]
   (errorf "query-load-error: %s" table error)
   (when (= query-id (get-in db [:query table :id]))
-    {:dispatch (if (= 403 (:status error))
-                 [:jwt-expired]
-                 [:api-error :query-load error])
+    {:dispatch [:http-error :query-load error]
      :db       (update-in db [:query table] merge
                           {:time     (js/Date.now)
                            :loading? false

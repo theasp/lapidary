@@ -13,12 +13,6 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn dispatch-login-ok [result]
-  )
-
-(defn dispatch-login-error [result]
-  (rf/dispatch [:login-error result]))
-
 (defn login [{:keys [db]} [_ username password]]
   (debugf "login: %s %s" username password)
   (when-not (get-in db [:login :loading?])
@@ -40,12 +34,19 @@
                       :error    nil})})
 
 (defn login-error [{:keys [db]} [_ error]]
-  {:dispatch [:api-error :login error]
-   :db       (update db :login merge
-                     {:jwt      nil
-                      :loading? false
-                      :error    error})})
+  {:dispatch [:http-error :login error]
+   :db       (update db :login merge {:jwt      nil
+                                      :loading? false
+                                      :error    error})})
 
+(defn jwt-expired [{:keys [db]} _]
+  (when-not (get-in db [:login :loading?])
+    (if (db/login-ok? db)
+      {:dispatch [:login (get-in db [:login :username]) (get-in db [:login :password])]
+       :db       (update db :login merge {:jwt nil})}
+      {:db (assoc-in db [:login :jwt] nil)})))
+
+(rf/reg-event-fx :jwt-expired jwt-expired)
 (rf/reg-event-fx :login login)
 (rf/reg-event-fx :login-ok login-ok)
 (rf/reg-event-fx :login-error login-error)

@@ -76,9 +76,7 @@
 (defn field-load-error [{:keys [db]} [_ table field id error]]
   (errorf "field-load-error: %s %s %s" table field error)
   (when (= id (get-in db [:query table :field-values field :id]))
-    {:dispatch (if (= 403 (:status error))
-                 [:jwt-expired]
-                 [:api-error :field-load error])
+    {:dispatch [:http-error :field-load error]
      :db       db}))
 
 (defn field-refresh [{:keys [db]} [_ table field]]
