@@ -231,8 +231,21 @@
         show-field      @(rf/subscribe [:query-show-field table])
         pages           @(rf/subscribe [:query-pages table])]
     [:div
-     [navbar/navbar state/app-state {:brand [{:key :fields :item [fields-toggle-button table]}
-                                             {:key :title :item table}]}]
+     [navbar/navbar {:brand [{:key :fields :item [fields-toggle-button table]}
+                             {:key :title :item table}]}
+      [:div.navbar-end
+       [:div.navbar-item
+        [:div.field.is-grouped
+         [:p.control
+          [:a.button.is-white
+           {:on-click #(rf/dispatch [:query-settings-visible table true])}
+           [:span.icon [:i.fas.fa-cog]]
+           [:span "Settings"]]]
+         [:p.control
+          [:a.button.is-white
+           {:on-click #(rf/dispatch [:tables-navigate])}
+           [:span.icon [:i.fas.fa-table]]
+           [:span "Tables"]]]]]]]
      [:div.columns.is-mobile.is-flex.is-fullsize
       (when (some? show-field)
         [field/stream-field-dialog table])

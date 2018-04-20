@@ -95,7 +95,7 @@
 
 (defn list-tables [view]
   [:div
-   [navbar/navbar state/app-state nil]
+   [navbar/navbar {:brand [{:key :title :item "Tables"}]} nil]
    [:section.section
     [:div.columns.is-multiline
      (for [table @(rf/subscribe [:tables])]
