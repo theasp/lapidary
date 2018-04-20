@@ -20,7 +20,8 @@
                 [com.cognitect/transit-cljs "0.8.243"]
                 [cljs-ajax "0.7.3"]
                 [reagent "0.7.0"]
-                [re-frame "0.10.5"]]
+                [re-frame "0.10.5"]
+                [day8.re-frame/http-fx "0.1.5"]]
 
  :builds {:server {:target    :node-script
                    :output-to "target/private/js/server.js"
