@@ -74,7 +74,7 @@
   (start [this]
     (infof "Starting")
     (let [props        {:path-for (partial bide/resolve routes/web-router)
-                        :title    "LogView"}
+                        :title    "Lapidary"}
           app-handler  (-> props pages/app-page)
           handlers     (-> {:app       app-handler
                             :not-found (pages/not-found props)}
