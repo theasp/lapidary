@@ -24,3 +24,21 @@ services:
       DB_NAME: lapidary
     depends_on:
       - db
+
+  fluentd:
+    image: theasp/fluentd-plugins:pgjson
+    restart: always
+    ports:
+      - "24224:24224"
+      - "9880:9880"
+    volumes:
+      - "/srv/lapidary-fluentd/etc:/fluentd/etc"
+      - "/srv/lapidary-fluentd/log:/fluentd/log"
+      - "/srv/lapidary-fluentd/pos:/fluentd/pos"
+      # If you want to log from systemd on localhost, you can use these
+      # - /etc/machine-id:/etc/machine-id:ro
+      # - /var/log:/var/log:ro
+      # - /run/log/journal:/run/log/journal:ro
+      # - /run/systemd/journal:/run/systemd/journal:ro
+    depends_on:
+      - db
