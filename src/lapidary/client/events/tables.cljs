@@ -34,14 +34,14 @@
   (update table :searches result->searches))
 
 (defn tables-load-ok [db [_ tables]]
-  #_(debugf "tables-load-ok: %s" tables)
+  (debugf "tables-load: %s tables" (count tables))
   (merge db {:tables          (map result->table tables)
              :tables-time     (js/Date.now)
              :tables-loading? false
              :tables-error    nil}))
 
 (defn tables-load-error [{:keys [db]} [_ error]]
-  (debugf "tables-load-error: %s" error)
+  (errorf "tables-load: %s" error)
   {:dispatch [:http-error :tables-load error]
    :db       (merge db {:tables-time     (js/Date.now)
                         :tables-loading? false
@@ -55,6 +55,7 @@
   nil)
 
 (defn tables-create [{:keys [db]} [_ name]]
+  (debugf "creating table: %s" name)
   (when (and (db/table-name-ok? name))
     (api/create-log-table name (get-in db [:login :jwt])
                           #(rf/dispatch [:tables-create-ok name %])
@@ -62,6 +63,7 @@
     {:db (assoc db :tables-creating? true)}))
 
 (defn tables-create-ok [db [_ name result]]
+  (debugf "table created: %s" name)
   (-> db
       (update :tables conj {:table_name name})
       (merge {:tables-creating?    false

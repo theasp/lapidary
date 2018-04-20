@@ -14,7 +14,7 @@
    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn login [{:keys [db]} [_ username password]]
-  (debugf "login: %s %s" username password)
+  (debugf "Attempting login: %s" username)
   (when-not (get-in db [:login :loading?])
     (api/login {:username username :password password}
                #(rf/dispatch [:login-ok username password %])
@@ -25,6 +25,7 @@
                   :loading? true})}))
 
 (defn login-ok [{:keys [db]} [_ username password jwt]]
+  (debugf "login ok: %s" username)
   {:dispatch [:refresh]
    :db       (update db :login merge
                      {:username username
@@ -34,6 +35,7 @@
                       :error    nil})})
 
 (defn login-error [{:keys [db]} [_ error]]
+  (errorf "login: %s" error)
   {:dispatch [:http-error :login error]
    :db       (update db :login merge {:jwt      nil
                                       :loading? false
