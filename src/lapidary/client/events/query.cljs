@@ -299,6 +299,9 @@
                                  (get-in db [:query table :searches :saved name])))
   db)
 
+(defn query-settings-visible [db [_ table visible?]]
+  (assoc-in db [:query table :settings-visibile?] visible?))
+
 (rf/reg-event-fx :query-init query-init)
 (rf/reg-event-fx :query-refresh query-refresh)
 (rf/reg-event-fx :query-load query-load)
@@ -320,3 +323,4 @@
 (rf/reg-event-db :query-show-field query-show-field)
 (rf/reg-event-db :query-show-field-close query-show-field-close)
 (rf/reg-event-db :query-saved-load query-saved-load)
+(rf/reg-event-db :query-settings-visible query-settings-visible)

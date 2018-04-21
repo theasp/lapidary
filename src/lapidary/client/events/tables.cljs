@@ -75,6 +75,10 @@
                         :tables-create-error error})
    :dispatch [:http-error :tables-create error]})
 
+(defn tables-navigate [_ _]
+  (router/navigate! {:name :lapidary/list-tables})
+  nil)
+
 (rf/reg-event-fx :tables-init tables-init)
 (rf/reg-event-fx :tables-load tables-load)
 (rf/reg-event-db :tables-load-ok tables-load-ok)
@@ -84,3 +88,4 @@
 (rf/reg-event-fx :tables-create tables-create)
 (rf/reg-event-db :tables-create-ok tables-create-ok)
 (rf/reg-event-fx :tables-create-error tables-create-error)
+(rf/reg-event-fx :tables-navigate tables-navigate)
