@@ -43,11 +43,13 @@
   width: 5em;
 }
 
-table td.is-shrink {
+table td.is-shrink,
+table th.is-shrink {
   white-space: nowrap
 }
 
-table td.is-expand {
+table td.is-expand,
+table th.is-expand {
   width: 100%;
   max-width: 100%;
 }
