@@ -3,7 +3,7 @@
    [lapidary.client.ui :as ui]
    [lapidary.client.router :as router]
    [lapidary.client.state :as state]
-   [reagent.core :as reagent :refer [atom]]
+   [mount.core :as mount :refer [defstate]]
    [bide.core :as bide]
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
@@ -12,11 +12,12 @@
 (enable-console-print!)
 
 (defn start! []
-  (router/start! state/app-state)
-  (ui/start! state/app-state))
+  (infof "Stopping")
+  (mount/start))
 
 (defn stop! []
-  (infof "Stopping"))
+  (infof "Stopping")
+  (mount/stop))
 
 (defn restart! []
   (js/console.clear)

@@ -129,7 +129,12 @@
 (rf/reg-sub
  :query-fields-visible?
  (fn [db [_ table]]
-   (get-in db [:query table :fields-visible?])))
+   (get-in db [:query table :fields-visible?] false)))
+
+(rf/reg-sub
+ :query-settings-visible?
+ (fn [db [_ table]]
+   (get-in db [:query table :settings-visible?] false)))
 
 (rf/reg-sub
  :query-page

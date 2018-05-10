@@ -9,6 +9,7 @@
    [lapidary.client.ui.navbar :as navbar]
    [lapidary.client.ui.pagination :as pagination]
    [lapidary.client.ui.field :as field]
+   [lapidary.client.ui.table-settings :as table-settings]
    [lapidary.client.ui.sidebar :as sidebar]
    [re-frame.core :as rf]
    [lapidary.client.router :as router]
@@ -225,11 +226,13 @@
      [:span.icon [:i.fas.fa-list]]]))
 
 (defn view-query [view]
-  (let [table           (get-in view [:params :table])
-        page            @(rf/subscribe [:query-page table])
-        fields-visible? @(rf/subscribe [:query-fields-visible? table])
-        show-field      @(rf/subscribe [:query-show-field table])
-        pages           @(rf/subscribe [:query-pages table])]
+  (let [table             (get-in view [:params :table])
+        page              @(rf/subscribe [:query-page table])
+        fields-visible?   @(rf/subscribe [:query-fields-visible? table])
+        settings-visible? @(rf/subscribe [:query-settings-visible? table])
+        show-field        @(rf/subscribe [:query-show-field table])
+        pages             @(rf/subscribe [:query-pages table])]
+    (debugf "Settings: %s" settings-visible?)
     [:div
      [navbar/navbar {:brand [{:key :fields :item [fields-toggle-button table]}
                              {:key :title :item table}]}
@@ -251,6 +254,8 @@
         [field/stream-field-dialog table])
       (when fields-visible?
         [sidebar/stream-fields table])
+      (when settings-visible?
+        [table-settings/dialog table])
       [:div.column.section.is-flex {:style {:flex-direction :column}}
        [query-form table]
        [stream-filter-tags table]

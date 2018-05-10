@@ -1,42 +1,18 @@
 ;; shadow-cljs configuration
-{:source-paths ["src"]
-
- :dependencies [[thheller/shadow-cljsjs "0.0.5"]
-                [org.clojure/clojurescript "1.10.145"]
-                [org.clojure/core.async  "0.4.474"]
-                [com.stuartsierra/component "0.3.2"]
-                [com.taoensso/timbre "4.10.0"]
-                [com.taoensso/tufte "1.1.2"]
-                [funcool/bide "1.6.0"]
-                [instaparse "1.4.8"]
-                [macchiato/core "0.2.10"]
-                [macchiato/auth "0.0.2"]
-                [macchiato/env "0.0.6"]
-                [hiccups "0.3.0"]
-                [ca.gt0.theasp/macchiato-core-async "0.2.1"]
-                [sqlingvo "0.9.20"]
-                [cljsjs/react "15.6.2-4"]
-                [org.danielsz/system "0.4.1"]
-                [com.cognitect/transit-cljs "0.8.243"]
-                [cljs-ajax "0.7.3"]
-                [reagent "0.7.0"]
-                [re-frame "0.10.5"]
-                [day8.re-frame/http-fx "0.1.5"]]
-
+{:deps   true
  :builds {:server {:target    :node-script
                    :output-to "target/private/js/server.js"
                    :modules   {:server {:entries [lapidary.server]}}
                    :main      lapidary.server/start!
-                   :devtools  {:before-load-async lapidary.server/stop!
-                               :after-load        lapidary.server/start!}}
+                   :devtools  {:devtools-url "https://cljs-dev.industrial.gt0.ca/shadow-cljs"}}
           :client {:target     :browser
                    :output-dir "resources/public/js"
                    :asset-path "/js"
                    :modules    {:app {:entries [lapidary.client]}}
                    :main       lapidary.client/start!
-                   :devtools   {:watch-dir   "resources/public"
-                                :before-load lapidary.client/stop!
-                                :after-load  lapidary.client/start!}}}
-
- :http {:port 9650
-        :host "0.0.0.0"}}
+                   :devtools   {:devtools-url "https://cljs-dev.industrial.gt0.ca/shadow-cljs"
+                                :watch-dir    "resources/public"
+                                :before-load  lapidary.client/stop!
+                                :after-load   lapidary.client/restart!}}}
+ :http   {:port 9650
+          :host "0.0.0.0"}}

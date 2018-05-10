@@ -1,32 +1,21 @@
 (ns lapidary.server.pg-pool
   (:require
-   [com.stuartsierra.component :as component]
    [lapidary.server.pg :as pg]
+   [lapidary.server.config :refer [env]]
+   [mount.core :refer [defstate]]
    [taoensso.timbre :as timbre
     :refer-macros [tracef debugf infof warnf errorf]]))
 
-(defn make-config [{:keys [user password host port db pool-size]}]
-  {:hostname  host
-   :port      port
-   :database  db
-   :username  user
-   :password  password
-   :pool-size pool-size})
+(defn start-pg-pool []
+  (infof "Starting")
+  ;; TODO: Add error handling
+  (pg/open-pool (:db @env)))
 
-(defrecord PgPool [config db]
-  component/Lifecycle
-  (start [this]
-    (infof "Starting")
-    ;; TODO: Add error handling
-    (let [db (-> config :db make-config pg/open-pool)]
-      (assoc this :db db)))
+(defn stop-pg-pool [pg-pool]
+  (infof "Stopping")
+  (when pg-pool
+    (.end pg-pool)))
 
-  (stop [this]
-    (infof "Stopping")
-    (when db
-      (.end db))
-    (dissoc this :db)))
-
-(defn new-pg-pool []
-  (-> (map->PgPool {})
-      (component/using [:config])))
+(defstate pg-pool
+  :start (start-pg-pool)
+  :stop (stop-pg-pool pg-pool))

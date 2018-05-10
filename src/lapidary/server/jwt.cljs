@@ -5,6 +5,7 @@
    [cljs.core.async
     :refer [<! chan put! close! onto-chan to-chan]
     :as async]
+   [lapidary.server.config :refer [env]]
    [taoensso.timbre :as timbre
     :refer-macros [tracef debugf infof warnf errorf]])
   (:require-macros
@@ -21,17 +22,31 @@
     (apply f (concat args [callback]))
     result))
 
-(defn sign [payload secret & [opts]]
-  (result-chan jwt.sign
-               (clj->js payload)
+(defn sign
+  ([payload secret opts]
+   (result-chan jwt.sign
+                (clj->js payload)
+                (str secret)
+                (clj->js opts)))
+  ([payload secret opts result-fn]
+   (jwt.sign (clj->js payload)
+             (str secret)
+             (clj->js opts)
+             result-fn)))
+
+(defn verify
+  ([token secret opts]
+   (result-chan jwt.verify
+                (str token)
+                (str secret)
+                (clj->js opts)))
+
+  ([token secret opts result-fn]
+   (jwt.verify (str token)
                (str secret)
-               (clj->js opts)))
-(defn verify [token secret & [opts]]
-  (result-chan jwt.verify
-               (str token)
-               (str secret)
-               (clj->js opts)))
+               (clj->js opts)
+               result-fn)))
 
 (defn decode [token & [opts]]
-  (-> (jwt.decode token (clj->js opts))
+  (-> (jwt.decode token (clj->js (merge (:jwt env) opts)))
       (js->clj :keywordize-keys true)))

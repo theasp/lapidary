@@ -16,7 +16,7 @@
 (defn http-error [{:keys [db]} [_ type error]]
   (case (:status error)
     403 {:dispatch [:jwt-expired]}
-    401 {:dispatch [:login-failed]}
+    401 {:dispatch [:jwt-expired]}
     {:dispatch [:api-error type]}))
 
 (rf/reg-event-fx :http-error http-error)

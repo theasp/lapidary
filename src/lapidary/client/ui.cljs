@@ -6,6 +6,7 @@
    [lapidary.client.ui.tables :as tables]
    [lapidary.client.ui.query :as query]
    [lapidary.client.ui.login :as login]
+   [mount.core :as mount :refer [defstate]]
    [clojure.string :as str]
    [re-frame.core :as rf]
    [reagent.core :as reagent :refer [atom]]
@@ -27,6 +28,9 @@
             [tables/list-tables view]))
       [login/login])))
 
-(defn start! [state]
+(defn start! []
+  (debugf "Start")
   (rf/dispatch-sync [:initialize])
   (reagent/render-component [app] (js/document.getElementById "app")))
+
+(defstate ui :start (start!))

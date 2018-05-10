@@ -2,28 +2,27 @@
 
 export DEBUG="*"
 export DEBUG_LEVEL=verbose
-export TIMBRE_LEVEL=':debug'               # Elide all lower logging calls
+export TIMBRE_LEVEL=':trace'               # Elide all lower logging calls
+export DEVELOPMENT=true
 
-export ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-export ADMIN_PASSWORD=${ADMIN_PASSWORD:-ChangeMe!}
+export AUTH__METHOD=${AUTH__METHOD:-user}
+export AUTH__ADMIN_USERNAME=${AUTH__ADMIN_USERNAME:-admin}
+export AUTH__ADMIN_PASSWORD=${AUTH__ADMIN_PASSWORD:-ChangeMe!}
+export AUTH__SECRET=${AUTH__SECRET:-$(head -c 8 /dev/urandom | hexdump -ve '1/1 "%.2x"')}
 
-export DEVELOPMENT=${DEVELOPMENT:-true}
+export HTTP__PORT=${HTTP__PORT:-${PORT:-3011}}
+export HTTP__ADDRESS=${HTTP__ADDRESS:-"0.0.0.0"}
 
-export HTTP_PORT=${HTTP_PORT:-${PORT:-3011}}
-export HTTP_ADDRESS=${HTTP_ADDRESS:-"0.0.0.0"}
+export DB__DATABASE=${DB__DATABASE:-lapidary}
+export DB__USERNAME=${DB__USERNAME:-lapidary}
+export DB__PASSWORD=${DB__PASSWORD:-lapidary}
+export DB__PORT=${DB__PORT:-5433}
+export DB__HOSTNAME=${DB__HOSTNAME:-127.0.0.1}
+export DB__POOL_SIZE=11
 
-export DB_NAME=${DB_NAME:-lapidary}
-export DB_USER=${DB_USER:-lapidary}
-export DB_PASSWORD=${DB_PASSWORD:-lapidary}
-export DB_PORT=${DB_PORT:-5432}
-export DB_HOST=${DB_HOST:-127.0.0.1}
-export DB_URI=${DB_URI:-postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}}
+export LDAP__URL="ldaps://ipa.gt0.ca"
+export LDAP__BASE_DN="dc=gt0,dc=ca"
 
-export WEB_PROTO=${WEB_PROTO:-http}
-export WEB_FQDN=${WEB_FQDN:-lapidary}
-export WEB_ROOT=${WEB_ROOT:-""}
-
-export COOKIE_SECRET=${COOKIE_SECRET:-$(head -c 8 /dev/urandom | hexdump -ve '1/1 "%.2x"')}
-export JWT_SECRET=${JWT_SECRET:-$(head -c 8 /dev/urandom | hexdump -ve '1/1 "%.2x"')}
+export JWT__SECRET=${JWT__SECRET:-$(head -c 8 /dev/urandom | hexdump -ve '1/1 "%.2x"')}
 
 exec node target/private/js/server.js

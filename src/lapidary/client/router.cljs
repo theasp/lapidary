@@ -3,6 +3,7 @@
    [lapidary.transit :as transit]
    [lapidary.utils :as utils]
    [lapidary.client.db :as db]
+   [mount.core :as mount :refer [defstate]]
    [re-frame.core :as rf]
    [bide.core :as bide]
    [taoensso.timbre :as timbre
@@ -23,11 +24,6 @@
     #_(debugf "New view: %s" view)
     (rf/dispatch [:view-update view])))
 
-(defn start! [state]
-  (bide/start! router {:default     :lapidary/list-tables
-                       :on-navigate on-navigate
-                       :html5?      false}))
-
 (defn navigate!
   ([name params query]
    (debugf "Navigating to: %s" [name params query])
@@ -41,3 +37,11 @@
   (navigate! :lapidary/query-table
              {:table table}
              (utils/subtract-map query db/default-query)))
+
+(defn start-router []
+  (infof "Start")
+  (bide/start! router {:default     :lapidary/list-tables
+                       :on-navigate on-navigate
+                       :html5?      false}))
+
+(defstate router :start (start-router))

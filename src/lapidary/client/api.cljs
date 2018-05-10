@@ -64,7 +64,7 @@
   ;; (debugf "QUERY: %s" (first sql))
   ;; (debugf "ARGS: %s" (rest sql))
   (ajax/POST (str base-url "/api/query")
-             {:headers         {:Authorization (str "Bearer " (:token jwt))}
+             {;;:headers         {:Authorization (str "Bearer " (:token jwt))}
               :params          {:execute sql}
               :format          format
               :response-format format
@@ -77,7 +77,7 @@
   ;; (doseq [transaction sql]
   ;;   (debugf "TX QUERY: %s %s" (first sql) (rest sql)))
   (ajax/POST (str base-url "/api/query")
-             {:headers         {:Authorization (str "Bearer " (:token jwt))}
+             {;;:headers         {:Authorization (str "Bearer " (:token jwt))}
               :params          {:transaction sql}
               :format          format
               :response-format format

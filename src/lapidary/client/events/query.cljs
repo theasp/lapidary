@@ -300,7 +300,7 @@
   db)
 
 (defn query-settings-visible [db [_ table visible?]]
-  (assoc-in db [:query table :settings-visibile?] visible?))
+  (assoc-in db [:query table :settings-visible?] visible?))
 
 (rf/reg-event-fx :query-init query-init)
 (rf/reg-event-fx :query-refresh query-refresh)
