@@ -21,4 +21,4 @@ pom.xml.asc
 /resources/public/js/compiled/**
 /target/
 /.shadow-cljs
-/.cpcache/1258432436.cp
+/.cpcache/
