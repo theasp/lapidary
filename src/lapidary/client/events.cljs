@@ -9,6 +9,7 @@
    [lapidary.client.events.searches :as searches]
    [lapidary.client.events.login :as login]
    [lapidary.client.events.error :as error]
+   [mount.core :refer [defstate]]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
    [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
@@ -16,12 +17,6 @@
     :refer-macros (tracef debugf infof warnf errorf)])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
-
-(defonce timestep
-  (go-loop []
-    (rf/dispatch [:refresh])
-    (<! (async/timeout 1000))
-    (recur)))
 
 (defn initialize [{:keys [db]} _]
   {:dispatch [:refresh]
@@ -59,3 +54,16 @@
 (rf/reg-event-fx :initialize initialize)
 (rf/reg-event-db :view-update view-update)
 (rf/reg-event-fx :refresh refresh)
+
+(defn refresh-timer []
+  (let [running? (atom true)]
+    (go-loop []
+      (when @running?
+        (rf/dispatch [:refresh])
+        (<! (async/timeout 1000))
+        (recur)))
+    #(reset! running? false)))
+
+(defstate timestep
+  :start (refresh-timer)
+  :stop (timestep))
