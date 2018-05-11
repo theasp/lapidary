@@ -4,6 +4,7 @@
   (:require
    [lapidary.server.pg :as pg]
    [lapidary.server.pg-pool :refer [pg-pool]]
+   [lapidary.server.stats :as stats]
    [lapidary.server.jwt :as jwt]
    [clojure.string :as str]
    [cljs.core.async
@@ -88,7 +89,8 @@
                     result)))))))
       (m-async/wrap-async)
       (auth/wrap-authorization #{:admin})
-      (auth/wrap-authentication @env)))
+      (auth/wrap-authentication @env)
+      (stats/wrap-stats :api-query)))
 
 (defn jwt-sign-result [req err token]
   (if err
@@ -102,10 +104,11 @@
   (let [{:keys [jwt auth]}               @env
         {:keys [expire audience secret]} jwt]
     (-> (fn [req res raise]
-          (let [body     (:body req)
-                username (:username body)
-                password (:password body)]
-            (if (and (= username (:admin-username auth))
+          (let [body           (:body req)
+                username       (:username body)
+                password       (:password body)
+                admin-password (:admin-username auth)]
+            (if (and (= username )
                      (= password (:admin-password auth)))
               (let [identity {:username username
                               :password password
@@ -113,12 +116,15 @@
                 (jwt/sign identity secret {:expiresIn expire
                                            :audience  audience}
                           (fn [err token]
-                            (debugf "Login: %s" identity)
+                            (debugf "Login ok: %s" identity)
                             (-> (jwt-sign-result req err token)
                                 (assoc :identity identity)
                                 (res)))))
-              (res (response/unauthorized req "Wrong username or password")))))
-        (auth/wrap-session-save))))
+              (do
+                (warnf "Login failed: %s" username)
+                (res (response/unauthorized req "Wrong username or password"))))))
+        (auth/wrap-session-save)
+        (stats/wrap-stats :api-login))))
 
 (def api-handlers {:api-query (api-query)
                    :api-login (api-login)})
