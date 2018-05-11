@@ -8,7 +8,7 @@
                       :audience "lapidary"
                       :expire   "7d"}
                :auth {:method         "user"
-                      :admin-user     "admin"
+                      :admin-username "admin"
                       :admin-password "ChangeMe!"
                       :secret         "a56d91fe526ab7d7"}
                :http {:address "127.0.0.1"

@@ -8,7 +8,7 @@ RUN shadow-cljs release client server
 
 FROM node:alpine
 WORKDIR /app
-ENV DB_NAME="lapidary" DB_HOST="postgres" DB_USER="lapidary" DB_PASSWORD="lapidary" WEB_FQDN="lapidary.example.com" HTTP_PORT="80"
+ENV DB__NAME="lapidary" DB__HOSTNAME="postgres" DB__USER="lapidary" DB__PASSWORD="lapidary" HTTP__PORT="80"
 EXPOSE 80
 CMD ["./run-server.sh"]
 RUN apk --no-cache add libpq bash
