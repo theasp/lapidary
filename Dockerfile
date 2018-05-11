@@ -1,8 +1,8 @@
 FROM theasp/clojurescript-nodejs:shadow-cljs-alpine as build
 WORKDIR /app
 RUN apk --no-cache add python alpine-sdk postgresql-dev git
-COPY package.json package-lock.json shadow-cljs.edn /app/
-RUN shadow-cljs npm-deps && npm install --save-dev shadow-cljs && npm install && npm install -g shadow-cljs
+COPY package.json package-lock.json shadow-cljs.edn deps.edn /app/
+RUN npm install -g shadow-cljs && npm install --save-dev shadow-cljs && shadow-cljs npm-deps && npm install && echo "nil" | clojure -
 COPY ./ /app
 RUN npm install --save-dev shadow-cljs && shadow-cljs release client server
 
