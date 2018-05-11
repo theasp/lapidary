@@ -38,5 +38,5 @@
                   (errorf "DB migration failure: %s" error)
                   (nodejs/process.exit 1))))))
 
-#_(defstate pg-schema
-    :start (start-pg-schema))
+(defstate pg-schema
+  :start (start-pg-schema))
