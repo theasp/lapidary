@@ -4,7 +4,7 @@ RUN apk --no-cache add python alpine-sdk postgresql-dev git
 COPY package.json package-lock.json shadow-cljs.edn /app/
 RUN shadow-cljs npm-deps && npm install --save-dev shadow-cljs && npm install
 COPY ./ /app
-RUN shadow-cljs release client server
+RUN npm install --save-dev shadow-cljs && shadow-cljs release client server
 
 FROM node:alpine
 WORKDIR /app
