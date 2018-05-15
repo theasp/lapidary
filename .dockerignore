@@ -1,7 +1,5 @@
 target
 repo
 .git
-node_modules
 Dockerfile*
 .shadow-cljs
-.cpcache
