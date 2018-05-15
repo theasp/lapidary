@@ -10,22 +10,22 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-deps-edn-{{ checksum deps.edn }}
+            - v1-deps-edn-{{ checksum "deps.edn" }}
             - v1-deps-edn-
       - restore_cache:
           keys:
-            - v1-node-modules-{{ checksum package.json }}
+            - v1-node-modules-{{ checksum "package.json" }}
             - v1-node-modules-
       - run: |
           docker image build -t theasp/lapidary:latest -f Dockerfile .
           echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
           docker push theasp/lapidary:latest
       - save_cache:
-          key: v1-deps-edn-{{ checksum deps.edn }}
+          key: v1-deps-edn-{{ checksum "deps.edn" }}
           paths:
             - .cpcache
       - save_cache:
-          key: v1-node-modules-{{ checksum package.json }}
+          key: v1-node-modules-{{ checksum "package.json" }}
           paths:
             - node_modules
 workflows:
