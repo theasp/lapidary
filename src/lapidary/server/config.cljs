@@ -4,28 +4,33 @@
             [taoensso.timbre :as timbre
              :refer-macros [tracef debugf infof warnf errorf]]))
 
-(def defaults {:jwt  {:secret   nil
-                      :audience "lapidary"
-                      :expire   "7d"}
-               :auth {:method         "user"
-                      :admin-username "admin"
-                      :admin-password "ChangeMe!"
-                      :secret         "a56d91fe526ab7d7"}
-               :http {:address "127.0.0.1"
-                      :port    8080}
-               :ldap {:url           "ldapi:///"
-                      :bind-dn       nil
-                      :bind-password nil
-                      :base-dn       "dc=example,dc=com"
-                      :user-filter   "(uid={{username}})"
-                      :reconnect     true
-                      :tls-verify    true}
-               :db   {:pool-size 10
-                      :hostname  "lapidary"
-                      :username  "lapidary"
-                      :password  "lapidary"
-                      :database  "lapidary"
-                      :port      5432}})
+(def defaults
+  {:jwt  {:secret   nil
+          :audience "lapidary"
+          :expire   "7d"}
+   :auth {:method         "user"
+          :admin-username "admin"
+          :admin-password "ChangeMe!"
+          :secret         "a56d91fe526ab7d7"}
+   :http {:address "127.0.0.1"
+          :port    8080}
+   :ldap {:url           "ldapi:///"
+          :bind-dn       nil
+          :bind-password nil
+          :user-attr     :dn
+          :group-attr    :memberOf
+          :user-base-dn  "ou=users,dc=example,dc=com"
+          :user-filter   "(uid={{username}})"
+          :role-mappings {"cn=lapidary,cn=groups,dc=example,dc=com"       :read
+                          "cn=lapidary-admin,cn=groups,dc=example,dc=com" :admin}
+          :reconnect     true
+          :tls-verify    true}
+   :db   {:pool-size 10
+          :hostname  "lapidary"
+          :username  "lapidary"
+          :password  "lapidary"
+          :database  "lapidary"
+          :port      5432}})
 
 (defn env* []
   (-> (config/deep-merge defaults (config/env))

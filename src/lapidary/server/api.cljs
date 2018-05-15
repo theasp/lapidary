@@ -6,6 +6,7 @@
    [lapidary.server.pg-pool :refer [pg-pool]]
    [lapidary.server.stats :as stats]
    [lapidary.server.jwt :as jwt]
+   [lapidary.server.ldap-auth :refer [ldap-auth]]
    [clojure.string :as str]
    [cljs.core.async
     :refer [<! chan put! close! onto-chan to-chan]
@@ -92,37 +93,53 @@
       (auth/wrap-authentication @env)
       (stats/wrap-stats :api-query)))
 
-(defn jwt-sign-result [req err token]
-  (if err
-    (response/internal-server-error req (str "Problem signing token: " (:result token)))
-    (-> (:result token)
-        (jwt/decode)
-        (assoc :token (:result token))
-        (r/ok))))
+
+
+(defn api-login-sign-ok [req res raise identity token]
+  (debugf "Login ok: %s %s" identity token)
+  (-> (assoc identity :token token)
+      (r/ok)
+      (assoc :identity identity)
+      (res)))
+
+(defn api-login-sign-error [req res raise identity err]
+  (errorf "Error while signing identity: %s %s" identity err)
+  (-> (response/internal-server-error req)
+      (res)))
+
+(defn api-login-sign-identity [{:keys [expire audience secret]}]
+  (fn [req res raise identity]
+    (debugf "Signing: %s %s " secret identity)
+    (jwt/sign identity secret {:expiresIn expire :audience audience}
+              (fn [err token]
+                (debugf "Sign result: %s" [err token])
+                (if err
+                  (api-login-sign-error req res raise identity err)
+                  (api-login-sign-ok req res raise identity (:result token)))))))
+
+(defn auth-result [req res raise sign-fn identity]
+  (debugf "Got identity: %s" identity)
+  (if (some? identity)
+    (if identity
+      (sign-fn req res raise identity)
+      (res (response/unauthorized req "Login failed")))
+    (res (response/internal-server-error req "Login returned nil"))))
+
+
+
 
 (defn api-login []
-  (let [{:keys [jwt auth]}               @env
-        {:keys [expire audience secret]} jwt]
-    (-> (fn [req res raise]
-          (let [body           (:body req)
-                username       (:username body)
-                password       (:password body)
-                admin-password (:admin-username auth)]
-            (if (and (= username )
-                     (= password (:admin-password auth)))
-              (let [identity {:username username
-                              :password password
-                              :role     :admin}]
-                (jwt/sign identity secret {:expiresIn expire
-                                           :audience  audience}
-                          (fn [err token]
-                            (debugf "Login ok: %s" identity)
-                            (-> (jwt-sign-result req err token)
-                                (assoc :identity identity)
-                                (res)))))
-              (do
-                (warnf "Login failed: %s" username)
-                (res (response/unauthorized req "Wrong username or password"))))))
+  (let [env     @env
+        auth    (:auth env)
+        auth-fn (case (get-in env [:auth :method])
+                  :ldap (auth/ldap-auth)
+                  (auth/static-auth {(:admin-username auth) {:password (:admin-password auth)
+                                                             :role     :admin}} ))
+        sign-fn (api-login-sign-identity (:jwt env))]
+    (-> (fn [{:keys [body] :as req} res raise]
+          (debugf "Login attempt")
+          (auth-fn (:username body) (:password body)
+                   #(auth-result req res raise sign-fn %)))
         (auth/wrap-session-save)
         (stats/wrap-stats :api-login))))
 
