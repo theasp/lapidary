@@ -16,12 +16,18 @@ services:
     image: theasp/lapidary
     restart: always
     ports:
-      - "3011:80"
+      - "48080:80"
     environment:
-      DB_HOST: db
-      DB_USER: lapidary
-      DB_PASSWORD: lapidary
-      DB_NAME: lapidary
+      HTTP__ADDRESS: 0.0.0.0
+      HTTP__PORT: 80
+      DB__HOSTNAME: db
+      DB__PORT: 5432
+      DB__USERNAME: lapidary
+      DB__PASSWORD: lapidary
+      DB__DATABASE: lapidary
+      AUTH__ADMIN_USER: admin
+      AUTH__ADMIN_PASSWORD: "ChangeMe!"
+      JWT__SECRET: "Change this string to something random, like a UUUID"
     depends_on:
       - db
 
@@ -29,8 +35,8 @@ services:
     image: theasp/fluentd-plugins:pgjson
     restart: always
     ports:
-      - "24224:24224"
-      - "9880:9880"
+      - "42442:24224"
+      - "49880:9880"
     volumes:
       - "/srv/lapidary-fluentd/etc:/fluentd/etc"
       - "/srv/lapidary-fluentd/log:/fluentd/log"

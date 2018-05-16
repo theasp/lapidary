@@ -5,7 +5,7 @@
     :refer-macros [tracef debugf infof warnf errorf]]))
 
 (defn record-stat [name start end]
-  (debugf "%s %sms" name (- end start)))
+  #_(debugf "%s %sms" name (- end start)))
 
 (defn wrap-stats [handler name]
   (fn [req res raise]
