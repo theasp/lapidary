@@ -97,8 +97,10 @@
 
 (defn wrap-authorization [handler roles]
   (fn [req res raise]
-    (if-let [identity (:identity req)]
-      (if (contains? (set roles) (keyword (:role identity)))
-        (handler req res raise)
-        (res (response/forbidden req)))
-      (res (response/unauthorized req)))))
+    (let [identity (:identity req)
+          roles    (set roles)
+          role     (keyword (:role identity))]
+      (cond
+        (not identity)         (res (response/unauthorized req))
+        (contains? roles role) (handler req res raise)
+        :default               (res (response/forbidden req))))))

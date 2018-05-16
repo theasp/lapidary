@@ -28,34 +28,34 @@
 (defn error? [e]
   (instance? js/Error e))
 
-(defn sql-response [req result]
-  (go (if-let [result (<! result)]
-        (do
-          #_(debugf "SQL RESULT: %s" result)
-          (if (error? result)
-            (response/bad-request req (str "SQL error: " result))
-            (r/ok {:result result})))
-        (response/internal-server-error req))))
-
 (defn api-query-execute [req client sql]
-  (sql-response req (pg/execute! client sql)))
+  (let [start-time (js/Date.now)
+        result     (pg/execute! client sql)]
+    (go
+      (let [result   (<! result)
+            end-time (js/Date.now)
+            time     (- end-time start-time)]
+        (cond
+          (not result)    (response/internal-server-error req)
+          (error? result) (response/bad-request req (str "SQL error: " result))
+          :default        (r/ok {:result result :time time}))))))
 
 (defn api-query-transaction [req client all-sql]
   (go
-    (let [start-transaction (<! (pg/execute! client ["BEGIN TRANSACTION"]))]
+    (let [start-time        (js/Date.now)
+          start-transaction (<! (pg/execute! client ["BEGIN TRANSACTION"]))]
       (if (error? start-transaction)
         (response/internal-server-error req (str "Error beginning transaction: " start-transaction))
         (let [results (loop [results []
                              all-sql all-sql]
                         (if-let [sql (first all-sql)]
-                          (do
+                          (let [result (<! (pg/execute! client sql))]
                             #_(debugf "Execute: %s" sql)
-                            (let [result (<! (pg/execute! client sql))]
-                              #_(debugf "Got result: %s" (type result))
-                              (if (error? result)
-                                result
-                                (recur (conj results result)
-                                       (rest all-sql)))))
+                            #_(debugf "Got result: %s" (type result))
+                            (if (error? result)
+                              result
+                              (recur (conj results result)
+                                     (rest all-sql))))
                           results))]
           (if (error? results)
             (do
@@ -64,7 +64,8 @@
             (let [commit-transaction (<! (pg/execute! client ["COMMIT TRANSACTION"]))]
               (if (error? commit-transaction)
                 (response/internal-server-error req (str "Error commiting transaction: " commit-transaction))
-                (r/ok {:result results})))))))))
+                (r/ok {:result results
+                       :time   (- (js/Date.now) start-time)})))))))))
 
 (defn api-query []
   (-> (fn [req]
@@ -119,14 +120,10 @@
 
 (defn auth-result [req res raise sign-fn identity]
   (debugf "Got identity: %s" identity)
-  (if (some? identity)
-    (if identity
-      (sign-fn req res raise identity)
-      (res (response/unauthorized req "Login failed")))
-    (res (response/internal-server-error req "Login returned nil"))))
-
-
-
+  (cond
+    (nil? identity) (res (response/internal-server-error req "Login returned nil"))
+    (not identity)  (res (response/unauthorized req "Login failed"))
+    :default        (sign-fn req res raise identity)))
 
 (defn api-login []
   (let [env     @env

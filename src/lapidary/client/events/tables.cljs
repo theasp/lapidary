@@ -23,7 +23,7 @@
   (when (and (not (:tables-loading? db))
              (db/login-ok? db))
     (api/get-tables! (get-in db [:login :jwt])
-                     #(rf/dispatch [:tables-load-ok (-> % :result :rows walk/keywordize-keys)])
+                     #(rf/dispatch [:tables-load-ok (-> % :result :rows walk/keywordize-keys) (:time %)])
                      #(rf/dispatch [:tables-load-error %]))
     {:db (assoc db :tables-loading? true)}))
 

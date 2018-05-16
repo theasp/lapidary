@@ -130,7 +130,7 @@
 (defn query-load-ok [db [_ table id result]]
   (if (= id (get-in db [:query table :id]))
     (let [{:keys [logs stats]} (-> result :result :rows first walk/keywordize-keys)]
-      (debugf "result: Logs: %s  Stats: %s" (count logs) (count stats))
+      (debugf "result: Logs: %s  Stats: %s  Time: %s" (count logs) (count stats) (:time result))
       (-> db
           (update-in [:query table] add-logs logs)
           (update-in [:query table] add-fields stats)
