@@ -134,11 +134,12 @@
 (defn upsert-search [table name options]
   #_(debugf "upsert-search: %s" [table name options])
   (let [options (clj->js options)]
-    (sql/insert db :lapidary.search [:table-name :search-name :options]
-                (sql/values [{:table-name  table
-                              :search-name name
-                              :options     options}])
-                (sql/on-conflict [:table-name :search-name]
+    (sql/insert db :lapidary.search [:table-schema :table-name :search-name :options]
+                (sql/values [{:table-schema "pubic"
+                              :table-name   table
+                              :search-name  name
+                              :options      options}])
+                (sql/on-conflict [:table-schema :table-name :search-name]
                                  (sql/do-update {:options options})))))
 
 (defn save-search! [table name options jwt ok-fn error-fn]
