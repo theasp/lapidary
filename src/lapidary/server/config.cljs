@@ -21,8 +21,8 @@
           :group-attr    :memberOf
           :user-base-dn  "ou=users,dc=example,dc=com"
           :user-filter   "(uid={{username}})"
-          :role-mappings {"cn=lapidary,cn=groups,dc=example,dc=com"       :read
-                          "cn=lapidary-admin,cn=groups,dc=example,dc=com" :admin}
+          :role-mappings {:read  "cn=lapidary,cn=groups,dc=example,dc=com"
+                          :admin "cn=lapidary-admin,cn=groups,dc=example,dc=com"}
           :reconnect     true
           :tls-verify    true}
    :db   {:pool-size 10
@@ -35,6 +35,9 @@
 (defn env* []
   (-> (config/deep-merge defaults (config/env))
       (select-keys (keys defaults))
-      (update-in [:auth :method] keyword)))
+      (update-in [:auth :method] keyword)
+      (update-in [:ldap :user-attr] keyword)
+      (update-in [:ldap :group-attr] keyword)
+      (update-in [:ldap :role-mappings] map-invert)))
 
 (defstate env :start (env*))
