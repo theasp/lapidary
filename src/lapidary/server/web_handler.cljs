@@ -81,9 +81,9 @@
                          (wrap-middleware))]
     {:stop-fn (start-http (:http @env) ring-handler)}))
 
-(defn stop-web-handler [web-handler]
+(defn stop-web-handler [{:keys [stop-fn]}]
   (infof "Stopping")
-  (when-let [stop-fn (:stop-fn web-handler)]
+  (when stop-fn
     (stop-fn)))
 
 (defstate web-handler
