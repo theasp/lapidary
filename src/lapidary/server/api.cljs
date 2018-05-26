@@ -76,7 +76,7 @@
           (if (and (nil? execute) (nil? transaction))
             (response/bad-request req "Query requires execute or transaction")
             (go
-              (let [[client done err] (<! (pg/connect! @pg-pool))]
+              (let [[client done err] (-> @pg-pool :pool pg/connect! <!)]
                 (if (or (nil? client) (some? err))
                   (do
                     (done)
@@ -110,10 +110,8 @@
 
 (defn api-login-sign-identity [{:keys [expire audience secret]}]
   (fn [req res raise identity]
-    (debugf "Signing: %s %s " secret identity)
     (jwt/sign identity secret {:expiresIn expire :audience audience}
               (fn [err token]
-                (debugf "Sign result: %s" [err token])
                 (if err
                   (api-login-sign-error req res raise identity err)
                   (api-login-sign-ok req res raise identity (:result token)))))))
