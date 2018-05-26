@@ -1,8 +1,10 @@
 (ns lapidary.server.config
-  (:require [macchiato.env :as config]
-            [mount.core :refer [defstate]]
-            [taoensso.timbre :as timbre
-             :refer-macros [tracef debugf infof warnf errorf]]))
+  (:require
+   [clojure.set :refer [map-invert]]
+   [macchiato.env :as config]
+   [mount.core :refer [defstate]]
+   [taoensso.timbre :as timbre
+    :refer-macros [tracef debugf infof warnf errorf]]))
 
 (def defaults
   {:jwt  {:secret   nil
