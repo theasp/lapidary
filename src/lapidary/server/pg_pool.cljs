@@ -9,12 +9,13 @@
 (defn start-pg-pool []
   (infof "Starting")
   ;; TODO: Add error handling
-  (pg/open-pool (:db @env)))
+  {:pool (pg/open-pool (:db @env))})
 
-(defn stop-pg-pool [pg-pool]
+(defn stop-pg-pool [{:keys [pool]}]
   (infof "Stopping")
-  (when pg-pool
-    (.end pg-pool)))
+  (when pool
+    (js/console.log pool)
+    (.end pool)))
 
 (defstate pg-pool
   :start (start-pg-pool)
