@@ -150,7 +150,8 @@
 (defn select-searches [table]
   (sql/select db [(sql/as `(json-agg :_searches) :searches)]
               (sql/from (sql/as :lapidary.search :_searches))
-              (when table (sql/where `(= :table_name ~table)))))
+              (when table (sql/where `(and (= :table_schema "public")
+                                           (= :table_name ~table))))))
 
 (defn get-searches! [table jwt ok-fn error-fn]
   (-> (select-searches table)
