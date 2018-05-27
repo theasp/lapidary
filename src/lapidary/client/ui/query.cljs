@@ -22,15 +22,14 @@
    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn stream-detail-value [table field value selected? set-selected column?]
-  (let [type          (state/detect-type value)
-        toggle-expand #(set-selected (if selected? nil field))]
+  (let [type (state/detect-type value)]
     [:div.control
      [:div.tags.has-addons.buttons
       [:a {:class    (str "tag " (if column? "is-primary" "is-link"))
-           :on-click toggle-expand}
+           :on-click #(rf/dispatch [:query-show-field table field])}
        [:tt (ui-misc/format-path field)]]
       [:a.tag.is-dark
-       {:on-click toggle-expand}
+       {:on-click #(set-selected (if selected? nil field))}
        [:tt {:title value}
         (-> value
             (ui-misc/format-value type :long)
