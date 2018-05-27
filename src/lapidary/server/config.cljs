@@ -17,9 +17,9 @@
    :http {:address "127.0.0.1"
           :port    8080}
    :ldap {:url           "ldapi:///"
-          :bind-dn       nil
-          :bind-password nil
-          :user-attr     :dn
+          :bind-dn       "cn=readonly,dc=example,dc=com"
+          :bind-password "readonly"
+          :user-attr     :uid
           :group-attr    :memberOf
           :user-base-dn  "ou=users,dc=example,dc=com"
           :user-filter   "(uid={{username}})"
