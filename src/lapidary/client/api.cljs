@@ -158,12 +158,24 @@
       (sql/sql)
       (sql-execute! jwt ok-fn error-fn)))
 
+(defn select-table-options [table]
+  (sql/select db [(sql/as `(json-agg :_table_options) :table_options)]
+              (sql/from (sql/as :lapidary.table_options :_table_options))
+              (when table (sql/where `(and (= :table_schema "public")
+                                           (= :table_name ~table))))))
+
+(defn get-table-options! [table jwt ok-fn error-fn]
+  (-> (select-table-options table)
+      (sql/sql)
+      (sql-execute! jwt ok-fn error-fn)))
+
 (defn select-log-tables []
   (sql/select db
               [(sql/as :pg_catalog.pg_class.relname :table-name)
                (sql/as `(pg_catalog.pg_table_size :pg_catalog.pg_class.oid) :table-size)
                (sql/as :pg_catalog.pg_class.reltuples :table-rows)
-               (sql/as (select-searches :pg_catalog.pg_class.relname) :searches)]
+               (sql/as (select-searches :pg_catalog.pg_class.relname) :searches)
+               (sql/as (select-table-options :pg_catalog.pg_class.relname) :table-options)]
               (sql/from :pg_catalog.pg_class)
               (sql/join :pg_catalog.pg_namespace.oid
                         :pg_catalog.pg_class.relnamespace)
