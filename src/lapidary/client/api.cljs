@@ -135,7 +135,7 @@
   #_(debugf "upsert-search: %s" [table name options])
   (let [options (clj->js options)]
     (sql/insert db :lapidary.search [:table-schema :table-name :search-name :options]
-                (sql/values [{:table-schema "pubic"
+                (sql/values [{:table-schema "public"
                               :table-name   table
                               :search-name  name
                               :options      options}])
