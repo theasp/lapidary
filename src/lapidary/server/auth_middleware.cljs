@@ -25,8 +25,10 @@
                                         :username    (:username payload)
                                         :role        (:role payload)
                                         :jwt-payload payload}]
-                          (-> (assoc req :identity identity)
-                              (handler res raise))))))
+                          (if (and (:role payload) (:username payload))
+                            (-> (assoc req :identity identity)
+                                (handler res raise))
+                            (response/forbidden req "Access denied"))))))
         (handler req res raise)))))
 
 (defn wrap-session-auth [handler]
@@ -67,21 +69,21 @@
 
 (defn highest-mapping [mappings]
   (let [roles (-> mappings vals set)]
-    (debugf "Roles: %s" roles)
     (condp has? roles
       :admin :admin
       :write :write
       :read  :read
-      :none)))
+      nil)))
 
 (defn ldap-result [{:keys [user-attr group-attr role-mappings]} result]
   (let [result   (js->clj result :keywordize-keys true)
         username (get result user-attr)
-        groups   (get result group-attr)
-        role     (-> (select-keys role-mappings groups)
-                     (highest-mapping))]
-    {:username username
-     :role     role}))
+        groups   (get result group-attr)]
+    (if-let [role (-> (select-keys role-mappings groups)
+                      (highest-mapping))]
+      {:username username
+       :role     role}
+      :forbidden)))
 
 (defn ldap-auth []
   (let [options     (:ldap @env)
@@ -92,7 +94,7 @@
       (.authenticate ldap-auth username password
                      (fn [err result]
                        (if err
-                         (result-fn false)
+                         (result-fn :unauthorized)
                          (-> result ldap-result result-fn)))))))
 
 (defn wrap-authorization [handler roles]

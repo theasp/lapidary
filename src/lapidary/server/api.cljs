@@ -119,9 +119,11 @@
 (defn auth-result [req res raise sign-fn identity]
   (debugf "Got identity: %s" identity)
   (cond
-    (nil? identity) (res (response/internal-server-error req "Login returned nil"))
-    (not identity)  (res (response/unauthorized req "Login failed"))
-    :default        (sign-fn req res raise identity)))
+    (nil? identity)            (res (response/internal-server-error req "Login returned nil"))
+    (not identity)             (res (response/unauthorized req "Login failed"))
+    (= :forbidden identity)    (res (response/forbidden req "Access denied"))
+    (= :unauthorized identity) (res (response/unauthorized req "Login failed"))
+    :default                   (sign-fn req res raise identity)))
 
 (defn api-login []
   (let [env     @env
