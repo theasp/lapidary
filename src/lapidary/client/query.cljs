@@ -7,10 +7,7 @@
    [lapidary.client.api :as api]
    [instaparse.core :as insta :refer-macros [defparser]]
    [lapidary.utils :as utils]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
-   [taoensso.timbre :as timbre :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+   [taoensso.timbre :as timbre :refer-macros (tracef debugf infof warnf errorf)]))
 
 (def db (sql/db :postgresql
                 {:sql-name        sql-util/sql-name-underscore

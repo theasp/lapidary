@@ -8,11 +8,8 @@
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]
    [re-frame.core :as rf]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (def column-class "column is-3-fullhd is-4-widescreen is-4-desktop is-6-tablet")
 

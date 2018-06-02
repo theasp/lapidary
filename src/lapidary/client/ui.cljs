@@ -9,12 +9,10 @@
    [mount.core :as mount :refer [defstate]]
    [clojure.string :as str]
    [re-frame.core :as rf]
+   [day8.re-frame.http-fx]
    [reagent.core :as reagent :refer [atom]]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn app []
   (let [view      @(rf/subscribe [:view])

@@ -2,11 +2,8 @@
   (:require
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn pagination [cur-page set-page & [pages]]
   (let [cur-page   (or cur-page 0)

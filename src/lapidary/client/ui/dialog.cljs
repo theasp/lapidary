@@ -1,14 +1,11 @@
 (ns lapidary.client.ui.dialog
   (:require
    [lapidary.utils :as utils]
-   ["dialog-polyfill" :as dialog-polyfillx]
+   ["dialog-polyfill"]
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn trigger
   "Returns a reagent class that can be used to easily add triggers

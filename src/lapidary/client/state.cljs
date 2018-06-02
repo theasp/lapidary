@@ -3,11 +3,8 @@
    [clojure.walk :as walk]
    [reagent.core :as reagent :refer [atom]]
    [lapidary.utils :as utils]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (def default-order "time.desc")
 

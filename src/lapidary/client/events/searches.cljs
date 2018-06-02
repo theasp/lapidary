@@ -10,11 +10,8 @@
    [lapidary.client.router :as router]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn keywordize-vec [c]
   (vec (map keyword c)))

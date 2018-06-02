@@ -9,11 +9,8 @@
    [lapidary.client.sugar :as sugar]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn field-load [{:keys [db]} [_ table field]]
   (when (and (not (get-in db [:query table :field-values field :loading?]))

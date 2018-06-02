@@ -15,11 +15,8 @@
    [lapidary.client.router :as router]
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn stream-detail-value [table field value selected? set-selected column?]
   (let [type (state/detect-type value)]

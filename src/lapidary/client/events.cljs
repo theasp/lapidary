@@ -12,11 +12,8 @@
    [mount.core :refer [defstate]]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
-   [cljs.core.async :refer [<! chan put! close! promise-chan] :as async]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn initialize [{:keys [db]} _]
   {:dispatch [:refresh]
@@ -56,13 +53,8 @@
 (rf/reg-event-fx :refresh refresh)
 
 (defn refresh-timer []
-  (let [running? (atom true)]
-    (go-loop []
-      (when @running?
-        (rf/dispatch [:refresh])
-        (<! (async/timeout 1000))
-        (recur)))
-    #(reset! running? false)))
+  (let [timer (js/setInterval #(rf/dispatch [:refresh]) 1000)]
+    #(js/clearInterval timer)))
 
 (defstate timestep
   :start (refresh-timer)

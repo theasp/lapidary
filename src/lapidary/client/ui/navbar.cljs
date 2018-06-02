@@ -4,9 +4,7 @@
    [lapidary.client.router :as router]
    [reagent.core :as reagent :refer [atom]]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn navbar [options menu]
   (let [menu-visible? (atom false)]

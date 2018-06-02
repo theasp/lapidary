@@ -8,9 +8,7 @@
    [reagent.core :as reagent :refer [atom]]
    [re-frame.core :as rf]
    [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)])
-  (:require-macros
-   [cljs.core.async.macros :refer [go go-loop]]))
+    :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn login []
   (let [username (atom "")
