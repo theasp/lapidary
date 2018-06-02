@@ -11,18 +11,34 @@
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
 
+(def table-expiry (* 60 1000))
+(def tables-expiry (* 30 1000))
+
+(defn table-refresh [{:keys [db]} [_ table]]
+  (when (and (not (get-in db [:tables table :loading?]))
+             (utils/expired? (get-in db [:tables table :time]) table-expiry))
+    {:dispatch [:table-load table]}))
+
+(defn table-load [{:keys [db]} [_ table]]
+  (when (and (not (:tables-loading? db))
+             (db/login-ok? db))
+    {:db         (assoc db :tables-loading? true)
+     :http-xhrio (-> (api/get-table table)
+                     (merge {:on-success [:table-load-ok]
+                             :on-failure [:table-load-error]}))}))
+
 (defn tables-refresh [{:keys [db]} _]
   (when (and (not (:tables-loading? db))
-             (utils/expired? (:tables-time db) (js/Date.now) (* 30 1000)))
+             (utils/expired? (:tables-time db) tables-expiry))
     {:dispatch [:tables-load]}))
 
 (defn tables-load [{:keys [db]} _]
   (when (and (not (:tables-loading? db))
              (db/login-ok? db))
-    (api/get-tables! (get-in db [:login :jwt])
-                     #(rf/dispatch [:tables-load-ok (-> % :result :rows walk/keywordize-keys) (:time %)])
-                     #(rf/dispatch [:tables-load-error %]))
-    {:db (assoc db :tables-loading? true)}))
+    {:db         (assoc db :tables-loading? true)
+     :http-xhrio (merge (api/get-tables)
+                        {:on-success [:tables-load-ok]
+                         :on-failure [:tables-load-error]})}))
 
 (defn result->searches [searches]
   (reduce searches/add-search {} searches))
@@ -31,11 +47,12 @@
   (update table :searches result->searches))
 
 (defn tables-load-ok [db [_ tables]]
-  (debugf "tables-load: %s tables" (count tables))
-  (merge db {:tables          (map result->table tables)
-             :tables-time     (js/Date.now)
-             :tables-loading? false
-             :tables-error    nil}))
+  (let [tables (-> tables :result :rows walk/keywordize-keys)]
+    (debugf "tables-load: %s tables" (count tables))
+    (merge db {:tables          (map result->table tables)
+               :tables-time     (js/Date.now)
+               :tables-loading? false
+               :tables-error    nil})))
 
 (defn tables-load-error [{:keys [db]} [_ error]]
   (errorf "tables-load: %s" error)
@@ -54,10 +71,10 @@
 (defn tables-create [{:keys [db]} [_ name]]
   (debugf "creating table: %s" name)
   (when (and (db/table-name-ok? name))
-    (api/create-log-table name (get-in db [:login :jwt])
-                          #(rf/dispatch [:tables-create-ok name %])
-                          #(rf/dispatch [:tables-create-error name %]))
-    {:db (assoc db :tables-creating? true)}))
+    {:db         (assoc db :tables-creating? true)
+     :http-xhrio (-> (api/create-log-table name)
+                     (merge {:on-success [:tables-create-ok name]
+                             :on-failure [:tables-create-error name]}))}))
 
 (defn tables-create-ok [db [_ name result]]
   (debugf "table created: %s" name)

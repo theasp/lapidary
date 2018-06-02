@@ -33,11 +33,10 @@
           end-time     (sugar/parse-time end-str)
           where        (->> (when-not all-values? (query/query->where query-str))
                             (query/query-filters nil start-time end-time filters))]
-      #_(debugf "WHERE: %s" where)
-      (api/query-field-values table field offset page-size where (get-in db [:login :jwt])
-                              #(rf/dispatch [:field-load-ok table field field-id %])
-                              #(rf/dispatch [:field-load-error table field field-id %]))
-      {:db db})))
+      {:db         db
+       :http-xhrio (-> (api/query-field-values table field offset page-size where)
+                       (merge {:on-success [:field-load-ok table field field-id]
+                               :on-failure [:field-load-error table field field-id]}))})))
 
 (def field-keys [:page :page-size :all-values?])
 
@@ -79,7 +78,7 @@
 (defn field-refresh [{:keys [db]} [_ table field]]
   (let [{:keys [time loading?]} (get-in db [:query table :field-values field])]
     (when (and (not loading?)
-               (utils/expired? time (js/Date.now) (* 120 1000)))
+               (utils/expired? time (* 120 1000)))
       {:dispatch [:field-load table field]})))
 
 (defn field-page [db [_ table field page]]

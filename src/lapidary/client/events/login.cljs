@@ -13,23 +13,24 @@
 (defn login [{:keys [db]} [_ username password]]
   (debugf "Attempting login: %s" username)
   (when-not (get-in db [:login :loading?])
-    (api/login {:username username :password password}
-               #(rf/dispatch [:login-ok username password %])
-               #(rf/dispatch [:login-error %]))
-    {:db (update db :login merge
-                 {:username nil
-                  :password nil
-                  :loading? true})}))
+    {:db         (update db :login merge
+                         {:username nil
+                          :password nil
+                          :loading? true})
+     :http-xhrio (-> (api/login {:username username :password password})
+                     (merge {:on-success [:login-ok]
+                             :on-failure [:login-error]}))}))
 
-(defn login-ok [{:keys [db]} [_ username password jwt]]
-  (debugf "login ok: %s" username)
-  {:dispatch [:refresh]
-   :db       (update db :login merge
-                     {:username username
-                      :password password
-                      :jwt      jwt
-                      :loading? false
-                      :error    nil})})
+(defn login-ok [{:keys [db]} [_ result]]
+  (let [{:keys [username password jwt]} result]
+    (debugf "login ok: %s" result)
+    {:dispatch [:refresh]
+     :db       (update db :login merge
+                       {:username username
+                        :password password
+                        :jwt      jwt
+                        :loading? false
+                        :error    nil})}))
 
 (defn login-error [{:keys [db]} [_ error]]
   (errorf "login: %s" error)

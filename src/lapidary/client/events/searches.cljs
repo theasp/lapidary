@@ -22,7 +22,7 @@
 (defn searches-refresh [{:keys [db]} [_ table]]
   (let [{:keys [time loading?]} (get-in db [:query table :searches])]
     (when (and (not loading?)
-               (utils/expired? time (js/Date.now) (* 120 1000)))
+               (utils/expired? time (* 120 1000)))
       {:dispatch [:searches-load table]})))
 
 (defn searches-load [{:keys [db]} [_ table]]
@@ -32,11 +32,10 @@
                  (update-in [:query table :searches :id] inc)
                  (assoc-in [:query table :searches :loading?] true))
           id (get-in db [:query table :searches :id])]
-      (api/get-searches! table
-                         (get-in db [:login :jwt])
-                         #(rf/dispatch [:searches-load-ok id table %])
-                         #(rf/dispatch [:searches-load-error id table %]))
-      {:db db})))
+      {:db         db
+       :http-xhrio (-> (api/get-searches table)
+                       (merge {:on-success [:searches-load-ok id table]
+                               :on-failure [:searches-load-error id table]}))})))
 
 (defn json->filter [coll [field values]]
   (assoc coll
@@ -104,10 +103,9 @@
     (let [query   (get-in db [:query table])
           options (-> (select-keys query [:query-str :start-str :end-str :columns :filters])
                       (search->json))]
-      (api/save-search! table name options (get-in db [:login :jwt])
-                        #(rf/dispatch [:searches-save-ok table name options])
-                        #(rf/dispatch [:searches-save-error table name %]))
-      {})))
+      {:http-xhrio (-> (api/save-search table name options)
+                       (merge {:on-success [:searches-save-ok table name options]
+                               :on-failure [:searches-save-error table name]}))})))
 
 (defn searches-save-ok [db [_ table name options result]]
   (assoc-in db [:query table :searches :saved name] options))

@@ -80,11 +80,13 @@
   (assoc query :fields (-> (reduce add-field nil fields)
                            (add-schema-fields))))
 
+(def query-expiry (* 30 1000))
+
 (defn query-refresh [{:keys [db]} [_ table]]
   #_(debugf "Query refresh: %s" table)
   (let [{:keys [time loading?]} (get-in db [:query table])]
     (when (and (not loading?)
-               (utils/expired? time (js/Date.now) (* 30 1000)))
+               (utils/expired? time query-expiry))
       {:dispatch [:query-load table]})))
 
 (defn same-query? [a b]
@@ -117,12 +119,10 @@
                  (update-in [:query table :id] inc)
                  (assoc-in [:query table :loading?] true))
           id (get-in db [:query table :id])]
-      (query/execute-query! table
-                            (get-in db [:query table])
-                            (get-in db [:login :jwt])
-                            #(rf/dispatch [:query-load-ok table id %])
-                            #(rf/dispatch [:query-load-error table id %]))
-      {:db db})))
+      {:db         db
+       :http-xhrio (-> (query/execute-query table (get-in db [:query table]))
+                       (merge {:on-success [:query-load-ok table id]
+                               :on-failure [:query-load-error table id]}))})))
 
 (defn query-load-ok [db [_ table id result]]
   (if (= id (get-in db [:query table :id]))

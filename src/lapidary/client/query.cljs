@@ -223,7 +223,7 @@
 
 (def query-debug-keys [:table :highest :page-size :page :query-str :start-str :end-str :sort-column :reverse? :filters])
 
-(defn execute-query! [table query-options jwt ok-fn error-fn]
+(defn execute-query [table query-options]
   #_(debugf "QUERY: %s %s" table (select-keys query-options query-debug-keys))
   (let [{:keys [highest page-size page query-str start-str end-str sort-column reverse? filters]}
         query-options
@@ -260,4 +260,4 @@
                               [(sql/as (sql/select db [`(json_agg :_window.*)] (sql/from :_window)) :logs)
                                (sql/as (sql/select db [`(json_agg :_stats.*)] (sql/from :_stats)) :stats)]))
         (sql/sql)
-        (api/sql-execute! jwt ok-fn error-fn))))
+        (api/sql-execute))))

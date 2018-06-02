@@ -32,6 +32,7 @@
                field (get-in db [:query table :show-field :name])]
            [[:query-refresh table]
             [:searches-refresh table]
+            #_[:table-refresh table]
             (when field
               [:field-refresh table field])]))})))
 

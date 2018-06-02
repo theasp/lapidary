@@ -48,39 +48,34 @@
   (and (some? jwt)
        (> (jwt-time-left jwt) 0)))
 
-(defn login [body ok-fn error-fn]
-  (ajax/POST (str base-url "/api/login")
-             {:params          body
-              :format          format
-              :response-format format
-              :handler         ok-fn
-              :error-handler   error-fn}))
+
+(defn login [body]
+  {:uri             (str base-url "/api/login")
+   :method          :post
+   :params          body
+   :format          (ajax/transit-request-format)
+   :response-format (ajax/transit-response-format)})
 
 
-(defn sql-execute! [sql jwt ok-fn error-fn]
+(defn sql-execute [sql]
   ;; (debugf "QUERY: %s" (first sql))
   ;; (debugf "ARGS: %s" (rest sql))
-  (ajax/POST (str base-url "/api/query")
-             {;;:headers         {:Authorization (str "Bearer " (:token jwt))}
-              :params          {:execute sql}
-              :format          format
-              :response-format format
-              :handler         ok-fn
-              :error-handler   error-fn
-              :keywords?       true}))
 
-(defn sql-transaction! [sql jwt ok-fn error-fn]
+  {:uri             (str base-url "/api/query")
+   :method          :post
+   :params          {:execute sql}
+   :format          (ajax/transit-request-format)
+   :response-format (ajax/transit-response-format)})
+
+(defn sql-transaction [sql]
   ;; (debugf "TRANSACTION:")
   ;; (doseq [transaction sql]
   ;;   (debugf "TX QUERY: %s %s" (first sql) (rest sql)))
-  (ajax/POST (str base-url "/api/query")
-             {;;:headers         {:Authorization (str "Bearer " (:token jwt))}
-              :params          {:transaction sql}
-              :format          format
-              :response-format format
-              :handler         ok-fn
-              :error-handler   error-fn
-              :keywords?       true}))
+  {:uri             (str base-url "/api/query")
+   :method          :post
+   :params          {:transaction sql}
+   :format          (ajax/transit-request-format)
+   :response-format (ajax/transit-response-format)})
 
 (defn query-window [data-query order-by offset limit & [where]]
   (sql/with db
@@ -97,7 +92,7 @@
                                     :body)]
                         (sql/from :_window))))
 
-(defn create-log-table [table-name jwt ok-fn error-fn]
+(defn create-log-table [table-name]
   ;; TODO: Make sure table-name does't suck
   (-> [(sql/sql (sql/create-table db (keyword (str "public." table-name))
                                   (sql/column :id :serial :not-null? true :primary-key? true)
@@ -107,12 +102,12 @@
        [(str "CREATE INDEX " table-name "_tag_idx ON " table-name "(tag)")]
        [(str "CREATE INDEX " table-name "_time_idx ON " table-name "(time)")]
        [(str "CREATE INDEX " table-name "_record_idx ON " table-name " USING GIN (record jsonb_path_ops)")]]
-      (sql-transaction! jwt ok-fn error-fn)))
+      (sql-transaction)))
 
-(defn drop-log-table [table-name jwt ok-fn error-fn]
+(defn drop-log-table [table-name]
   (-> (sql/drop-table db (keyword "public" table-name))
       (sql/sql)
-      (sql-execute! jwt ok-fn error-fn)))
+      (sql-execute)))
 
 (defn select-field-stats [table]
   (sql/select db [(sql/as :r.key :field)
@@ -139,10 +134,11 @@
                 (sql/on-conflict [:table-schema :table-name :search-name]
                                  (sql/do-update {:options options})))))
 
-(defn save-search! [table name options jwt ok-fn error-fn]
+
+(defn save-search [table name options]
   (-> (upsert-search table name options)
       (sql/sql)
-      (sql-execute! jwt ok-fn error-fn)))
+      (sql-execute)))
 
 (defn select-searches [table]
   (sql/select db [(sql/as `(json-agg :_searches) :searches)]
@@ -150,10 +146,11 @@
               (when table (sql/where `(and (= :table_schema "public")
                                            (= :table_name ~table))))))
 
-(defn get-searches! [table jwt ok-fn error-fn]
+
+(defn get-searches [table]
   (-> (select-searches table)
       (sql/sql)
-      (sql-execute! jwt ok-fn error-fn)))
+      (sql-execute)))
 
 (defn select-table-options [table]
   (sql/select db [(sql/as `(json-agg :_table_options) :table_options)]
@@ -161,12 +158,12 @@
               (when table (sql/where `(and (= :table_schema "public")
                                            (= :table_name ~table))))))
 
-(defn get-table-options! [table jwt ok-fn error-fn]
+(defn get-table-options [table]
   (-> (select-table-options table)
       (sql/sql)
-      (sql-execute! jwt ok-fn error-fn)))
+      (sql-execute)))
 
-(defn select-log-tables []
+(defn select-log-tables [& [table]]
   (sql/select db
               [(sql/as :pg_catalog.pg_class.relname :table-name)
                (sql/as `(pg_catalog.pg_table_size :pg_catalog.pg_class.oid) :table-size)
@@ -176,13 +173,24 @@
               (sql/from :pg_catalog.pg_class)
               (sql/join :pg_catalog.pg_namespace.oid
                         :pg_catalog.pg_class.relnamespace)
-              (sql/where `(and (= :pg_catalog.pg_class.relkind "r")
-                               (= :pg_catalog.pg_namespace.nspname "public")))))
+              (sql/where (if table
+                           `(and (= :pg_catalog.pg_class.relname table)
+                                 (= :pg_catalog.pg_class.relkind "r")
+                                 (= :pg_catalog.pg_namespace.nspname "public"))
+                           `(and (= :pg_catalog.pg_class.relkind "r")
+                                 (= :pg_catalog.pg_namespace.nspname "public"))))))
 
-(defn get-tables! [jwt ok-fn error-fn]
+
+(defn get-table [table]
+  (-> (select-log-tables table)
+      (sql/sql)
+      (sql-execute)))
+
+
+(defn get-tables []
   (-> (select-log-tables)
       (sql/sql)
-      (sql-execute! jwt ok-fn error-fn)))
+      (sql-execute)))
 
 (defn select-matching [table field start end]
   (sql/select db
@@ -206,9 +214,11 @@
               (sql/where where)
               (sql/group-by :value)))
 
-(defn query-field-values [table field offset limit where jwt ok-fn error-fn]
+
+
+(defn query-field-values [table field offset limit where]
   (debugf "query-field-values: %s" [table field offset limit where])
   (-> (select-field-values table field where)
       (query-window (sql/desc :count) offset limit)
       (sql/sql)
-      (sql-execute! jwt ok-fn error-fn)))
+      (sql-execute)))
