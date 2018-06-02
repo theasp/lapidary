@@ -141,8 +141,11 @@
           a))
       (reduce a b)))
 
-(defn expired? [before now age]
-  (< age (- now before)))
+(defn expired?
+  ([before age]
+   (expired? before age (js/Date.now)))
+  ([before age now]
+   (< age (- now before))))
 
 (defn stop-propogation [f]
   (fn [e]
