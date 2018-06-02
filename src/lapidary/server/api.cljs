@@ -97,8 +97,8 @@
 
 
 (defn api-login-sign-ok [req res raise identity token]
-  (debugf "Login ok: %s %s" identity token)
-  (-> (assoc identity :token token)
+  (debugf "Login ok: %s" identity)
+  (-> (assoc identity :jwt token)
       (r/ok)
       (assoc :identity identity)
       (res)))
@@ -112,9 +112,10 @@
   (fn [req res raise identity]
     (jwt/sign identity secret {:expiresIn expire :audience audience}
               (fn [err token]
+                (debugf "jwt-sign-result: %s" [err token])
                 (if err
                   (api-login-sign-error req res raise identity err)
-                  (api-login-sign-ok req res raise identity (:result token)))))))
+                  (api-login-sign-ok req res raise identity token))))))
 
 (defn auth-result [req res raise sign-fn identity]
   (debugf "Got identity: %s" identity)
