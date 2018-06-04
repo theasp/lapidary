@@ -163,3 +163,13 @@
                   (conj res (conj prev k))))
               []
               m)))
+
+(defn update-map [m f & args]
+  (-> (fn [m k v]
+        (assoc m k (apply f v args)))
+      (reduce-kv {} m)))
+
+(defn update-map-keys [m f & args]
+  (-> (fn [m k v]
+        (assoc m (apply f k args) v))
+      (reduce-kv {} m)))

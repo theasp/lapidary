@@ -25,9 +25,9 @@ services:
       DB__USERNAME: lapidary
       DB__PASSWORD: lapidary
       DB__DATABASE: lapidary
-      AUTH__ADMIN_USER: admin
-      AUTH__ADMIN_PASSWORD: "ChangeMe!"
-      JWT__SECRET: "Change this string to something random, like a UUUID"
+      USERS__ADMIN__PASSWORD: "ChangeMe!"
+      USERS__ADMIN__ROLE: admin
+      JWT__SECRET: "Change this string to something random, like a UUID"
     depends_on:
       - db
 

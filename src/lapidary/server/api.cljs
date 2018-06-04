@@ -112,7 +112,7 @@
   (fn [req res raise identity]
     (jwt/sign identity secret {:expiresIn expire :audience audience}
               (fn [err token]
-                (debugf "jwt-sign-result: %s" [err token])
+                #_(debugf "jwt-sign-result: %s" [err token])
                 (if err
                   (api-login-sign-error req res raise identity err)
                   (api-login-sign-ok req res raise identity token))))))
