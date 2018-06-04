@@ -12,7 +12,7 @@
 (enable-console-print!)
 
 (defn start! []
-  (infof "Stopping")
+  (infof "Starting")
   (mount/start))
 
 (defn stop! []
