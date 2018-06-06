@@ -19,23 +19,22 @@
   {:dispatch [:refresh]
    :db       (merge db/default-db db)})
 
-(defn refresh [cofx _]
-  (let [db (:db cofx)]
-    (when (db/login-ok? db)
-      (condp = (get-in db [:view :name])
-        :lapidary/list-tables
-        {:dispatch [:tables-refresh]}
+(defn refresh [{:keys [db]} _]
+  (when (db/login-ok? db)
+    (condp = (get-in db [:view :name])
+      :lapidary/list-tables
+      {:dispatch [:tables-refresh]}
 
-        :lapidary/query-table
-        (let [table (get-in db [:view :params :table])
-              field (get-in db [:query table :show-field :name])]
-          {:dispatch-n [[:query-refresh table]
-                        [:searches-refresh table]
-                        #_[:table-refresh table]
-                        (when field
-                          [:field-refresh table field])]})))))
+      :lapidary/query-table
+      (let [table (get-in db [:view :params :table])
+            field (get-in db [:query table :show-field :name])]
+        {:dispatch-n [[:query-refresh table]
+                      [:searches-refresh table]
+                      #_[:table-refresh table]
+                      (when field
+                        [:field-refresh table field])]}))))
 
-(defn view-update  [db [_ new-view]]
+(defn view-update  [{:keys [db]} [_ new-view]]
   #_(debugf "view-update: %s" new-view)
   (merge (condp = (:name new-view)
            :lapidary/list-tables
