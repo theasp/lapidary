@@ -22,7 +22,7 @@
                  :exclude {}}
    :expand-log  nil
    :page        0
-   :page-size   100
+   :page-size   25
    :reverse?    true})
 
 (def search-keys
