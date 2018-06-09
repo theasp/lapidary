@@ -16,7 +16,7 @@ services:
     image: theasp/lapidary
     restart: always
     ports:
-      - "48080:80"
+      - "8081:80"
     environment:
       HTTP__ADDRESS: 0.0.0.0
       HTTP__PORT: 80
@@ -25,9 +25,26 @@ services:
       DB__USERNAME: lapidary
       DB__PASSWORD: lapidary
       DB__DATABASE: lapidary
+      JWT__SECRET: "Change this string to something random, like a UUID"
+
+      # Static users
       USERS__ADMIN__PASSWORD: "ChangeMe!"
       USERS__ADMIN__ROLE: admin
-      JWT__SECRET: "Change this string to something random, like a UUID"
+      # USERS__THEASP__PASSWORD: "letmein!"
+      # USERS__THEASP__ROLE: admin
+
+      # To use LDAP
+      # AUTH__METHOD: ldap
+      # LDAP__URL: ldaps://ldap.example.com
+      # LDAP__BIND_DN: cn=readonly,dc=example,dc=com
+      # LDAP__BIND_PASSWORD: "example"
+      # LDAP__USER_BASE_DN: "ou=people,dc=example,dc=com"
+      # LDAP__USER_FILTER: "(uid={{username}})"
+      # LDAP__ROLE_MAPPINGS__ADMIN: cn=lapdiary-admin,ou=group,dc=example,dc=com
+      # LDAP__USER_ATTR: uid
+      # LDAP__GROUP_ATTR: memberOf
+      # LDAP__RECONNECT: true
+      # LDAP__TLS_VERIFY: true
     depends_on:
       - db
 
@@ -35,8 +52,8 @@ services:
     image: theasp/fluentd-plugins:pgjson
     restart: always
     ports:
-      - "42442:24224"
-      - "49880:9880"
+      - "24225:24224"
+      - "9881:9880"
     volumes:
       - "/srv/lapidary-fluentd/etc:/fluentd/etc"
       - "/srv/lapidary-fluentd/log:/fluentd/log"
