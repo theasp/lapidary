@@ -129,10 +129,9 @@
 (defn api-login []
   (let [env     @env
         auth    (:auth env)
-        auth-fn (case (get-in env [:auth :method])
-                  :ldap (auth/ldap-auth)
-                  (auth/static-auth {(:admin-username auth) {:password (:admin-password auth)
-                                                             :role     :admin}} ))
+        auth-fn (case (get-in env [:auth :method] :users)
+                  :ldap  (auth/ldap-auth)
+                  :users (auth/static-auth (:users env)))
         sign-fn (api-login-sign-identity (:jwt env))]
     (-> (fn [{:keys [body] :as req} res raise]
           (debugf "Login attempt")
