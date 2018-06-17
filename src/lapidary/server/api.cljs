@@ -37,15 +37,21 @@
             time     (- end-time start-time)]
         (cond
           (not result)    (response/internal-server-error req)
-          (error? result) (response/bad-request req (str "SQL error: " result))
+          (error? result) (response/bad-request req {:execute sql
+                                                     :msg     (str "SQL error: " result)})
           :default        (r/ok {:result result :time time}))))))
+
+(def begin-transaction ["BEGIN TRANSACTION"])
+(def rollback-transaction ["ROLLBACK TRANSACTION"])
+(def commit-transaction ["COMMIT TRANSACTION"])
 
 (defn api-query-transaction [req client all-sql]
   (go
-    (let [start-time        (js/Date.now)
-          start-transaction (<! (pg/execute! client ["BEGIN TRANSACTION"]))]
-      (if (error? start-transaction)
-        (response/internal-server-error req (str "Error beginning transaction: " start-transaction))
+    (let [start-time (js/Date.now)
+          result     (<! (pg/execute! client begin-transaction))]
+      (if (error? result)
+        (response/internal-server-error req {:sql begin-transaction
+                                             :msg (str "Error beginning transaction: " result)})
         (let [results (loop [results []
                              all-sql all-sql]
                         (if-let [sql (first all-sql)]
@@ -59,11 +65,12 @@
                           results))]
           (if (error? results)
             (do
-              (<! (pg/execute! client ["ROLLBACK TRANSACTION"]))
-              (response/internal-server-error req (str "Error while executing query: " results)))
-            (let [commit-transaction (<! (pg/execute! client ["COMMIT TRANSACTION"]))]
-              (if (error? commit-transaction)
-                (response/internal-server-error req (str "Error commiting transaction: " commit-transaction))
+              (<! (pg/execute! client rollback-transaction))
+              (response/internal-server-error req {:transaction all-sql
+                                                   :msg         (str "Error while executing query: " results)}))
+            (let [result (<! (pg/execute! client commit-transaction))]
+              (if (error? result)
+                (response/internal-server-error req (str "Error commiting transaction: " result))
                 (r/ok {:result results
                        :time   (- (js/Date.now) start-time)})))))))))
 
@@ -80,7 +87,8 @@
                 (if (or (nil? client) (some? err))
                   (do
                     (done)
-                    (response/internal-server-error req (str "Error acquiring DB connection from pool: " (or err "unknown"))))
+                    (response/internal-server-error req
+                                                    {:msg (str "Error acquiring DB connection from pool: " (or err "unknown"))}))
                   (let [result (cond
                                  (some? execute)     (api-query-execute req client execute)
                                  (some? transaction) (api-query-transaction req client transaction))

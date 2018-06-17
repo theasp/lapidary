@@ -127,7 +127,7 @@
 (defn query-load-ok [db [_ table id result]]
   (if (= id (get-in db [:query table :id]))
     (let [{:keys [logs stats]} (-> result :result :rows first walk/keywordize-keys)]
-      (debugf "result: Logs: %s  Stats: %s  Time: %s" (count logs) (count stats) (:time result))
+      (debugf "query-load-ok: Table: %s  Logs: %s  Stats: %s  DB Time: %s" table (count logs) (count stats) (:time result))
       (-> db
           (update-in [:query table] add-logs logs)
           (update-in [:query table] add-fields stats)
@@ -290,11 +290,11 @@
                               (dissoc :show-field)))
   db)
 
-(defn query-saved-load [db [_ table name]]
-  (router/query-navigate! table
-                          (merge (get-in db [:view :query])
-                                 (get-in db [:query table :searches :saved name])))
-  db)
+;; (defn query-saved-load [db [_ table name]]
+;;   (router/query-navigate! table
+;;                           (merge (get-in db [:view :query])
+;;                                  (get-in db [:query table :searches :saved name])))
+;;   db)
 
 (defn query-settings-visible [db [_ table visible?]]
   (assoc-in db [:query table :settings-visible?] visible?))
@@ -319,5 +319,5 @@
 (rf/reg-event-db :query-filter-remove query-filter-remove)
 (rf/reg-event-db :query-show-field query-show-field)
 (rf/reg-event-db :query-show-field-close query-show-field-close)
-(rf/reg-event-db :query-saved-load query-saved-load)
+;;(rf/reg-event-db :query-saved-load query-saved-load)
 (rf/reg-event-db :query-settings-visible query-settings-visible)

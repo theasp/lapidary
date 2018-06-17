@@ -88,7 +88,7 @@
 
 (defn saved-query [table name]
   [:li
-   [:a {:on-click #(rf/dispatch [:query-saved-load table name])}
+   [:a {:on-click #(rf/dispatch [:table-query-search table name])}
     [:span.icon [:i.fas.fa-bookmark]]
     name]])
 
@@ -143,7 +143,7 @@
          :ask-name [saved-add-ask-name table state saved])])))
 
 (defn saved-searches [table]
-  (let [searches @(rf/subscribe [:searches table])]
+  (let [searches @(rf/subscribe [:table-searches table])]
     [:ul.menu-list
      (for [[name query] searches]
        ^{:key name} [saved-query table name query])

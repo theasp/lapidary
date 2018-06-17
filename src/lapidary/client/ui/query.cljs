@@ -228,7 +228,6 @@
         settings-visible? @(rf/subscribe [:query-settings-visible? table])
         show-field        @(rf/subscribe [:query-show-field table])
         pages             @(rf/subscribe [:query-pages table])]
-    (debugf "Settings: %s" settings-visible?)
     [:div
      [navbar/navbar {:brand [{:key :fields :item [fields-toggle-button table]}
                              {:key :title :item table}]}

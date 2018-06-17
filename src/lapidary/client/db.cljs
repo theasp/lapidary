@@ -1,8 +1,13 @@
 (ns lapidary.client.db
   (:require
+   [lapidary.utils :as utils]
    [clojure.string :as str]
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
+
+
+(def table-expiry (* 60 1000))
+(def tables-expiry (* 30 1000))
 
 (def default-db
   {:tables     nil
@@ -56,3 +61,38 @@
         jwt   (:jwt login)]
     #_(debugf "LOGIN: %s" (some? jwt))
     (and (some? jwt))))
+
+(defn put-table [db table]
+  (assoc-in db [:tables (:table_name table)] table))
+
+(defn table-expired? [db table]
+  (utils/expired? (get-in db [:tables table :time]) tables-expiry))
+
+(defn oldest-time [c]
+  (apply min (map :time c)))
+
+(defn tables-expired? [db]
+  (let [min-time (-> db :tables vals oldest-time)]
+    (utils/expired? min-time tables-expiry)))
+
+(defn table-loading? [db table]
+  (get-in db [:tables table :loading?] false))
+
+(defn tables-loading? [db]
+  (get db :tables-loading? false))
+
+(defn table-refresh? [db table]
+  (and (not (table-loading? db table))
+       (table-expired? db table)))
+
+(defn tables-refresh? [db]
+  (and (not (tables-loading? db))
+       (tables-expired? db)))
+
+(defn table-load? [db table]
+  (and (login-ok? db)
+       (not (table-loading? db table))))
+
+(defn tables-load? [db]
+  (and (login-ok? db)
+       (not (tables-loading? db))))

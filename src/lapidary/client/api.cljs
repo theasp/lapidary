@@ -92,6 +92,19 @@
                                     :body)]
                         (sql/from :_window))))
 
+(defn table-set-options [table-name options]
+  ;; TODO: Make sure table-name does't suck
+  (-> [(sql/sql (sql/create-table db (keyword (str "public." table-name))
+                                  (sql/column :id :serial :not-null? true :primary-key? true)
+                                  (sql/column :tag :text)
+                                  (sql/column :time :timestamptz)
+                                  (sql/column :record :jsonb)))
+       [(str "CREATE INDEX " table-name "_tag_idx ON " table-name "(tag)")]
+       [(str "CREATE INDEX " table-name "_time_idx ON " table-name "(time)")]
+       [(str "CREATE INDEX " table-name "_record_idx ON " table-name " USING GIN (record jsonb_path_ops)")]]
+      (sql-transaction)))
+
+
 (defn create-log-table [table-name]
   ;; TODO: Make sure table-name does't suck
   (-> [(sql/sql (sql/create-table db (keyword (str "public." table-name))
@@ -152,9 +165,21 @@
       (sql/sql)
       (sql-execute)))
 
+(defn delete-table-search-sql [table search]
+  (sql/delete db :lapidary.search
+              (sql/where `(and (= :table_schema "public")
+                               (= :table_name ~table)
+                               (= :search_name ~search)))))
+
+(defn delete-table-search [table search]
+  (-> (delete-table-search-sql table search)
+      (sql/sql)
+      (sql-execute)))
+
+
 (defn select-table-options [table]
-  (sql/select db [(sql/as `(json-agg :_table_options) :table_options)]
-              (sql/from (sql/as :lapidary.table_options :_table_options))
+  (sql/select db [:options]
+              (sql/from :lapidary.table_options)
               (when table (sql/where `(and (= :table_schema "public")
                                            (= :table_name ~table))))))
 
@@ -163,18 +188,33 @@
       (sql/sql)
       (sql-execute)))
 
+(defn upsert-table-options [table options]
+  #_(debugf "upsert-search: %s" [table name options])
+  (let [options (clj->js options)]
+    (sql/insert db :lapidary.table_options [:table-schema :table-name :options]
+                (sql/values [{:table-schema "public"
+                              :table-name   table
+                              :options      options}])
+                (sql/on-conflict [:table-schema :table-name]
+                                 (sql/do-update {:options options})))))
+
+(defn save-table-options [table options]
+  (-> (upsert-table-options table options)
+      (sql/sql)
+      (sql-execute)))
+
 (defn select-log-tables [& [table]]
   (sql/select db
               [(sql/as :pg_catalog.pg_class.relname :table-name)
-               (sql/as `(pg_catalog.pg_table_size :pg_catalog.pg_class.oid) :table-size)
-               (sql/as :pg_catalog.pg_class.reltuples :table-rows)
+               (sql/as `(pg_catalog.pg_table_size :pg_catalog.pg_class.oid) :size)
+               (sql/as :pg_catalog.pg_class.reltuples :rows)
                (sql/as (select-searches :pg_catalog.pg_class.relname) :searches)
-               (sql/as (select-table-options :pg_catalog.pg_class.relname) :table-options)]
+               (sql/as (select-table-options :pg_catalog.pg_class.relname) :options)]
               (sql/from :pg_catalog.pg_class)
               (sql/join :pg_catalog.pg_namespace.oid
                         :pg_catalog.pg_class.relnamespace)
               (sql/where (if table
-                           `(and (= :pg_catalog.pg_class.relname table)
+                           `(and (= :pg_catalog.pg_class.relname ~table)
                                  (= :pg_catalog.pg_class.relkind "r")
                                  (= :pg_catalog.pg_namespace.nspname "public"))
                            `(and (= :pg_catalog.pg_class.relkind "r")

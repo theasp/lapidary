@@ -11,8 +11,7 @@
    [re-frame.core :as rf]
    [day8.re-frame.http-fx]
    [reagent.core :as reagent :refer [atom]]
-   [taoensso.timbre :as timbre
-    :refer-macros (tracef debugf infof warnf errorf)]))
+   [taoensso.timbre :as timbre :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn app []
   (let [view      @(rf/subscribe [:view])

@@ -29,8 +29,7 @@
       (let [table (get-in db [:view :params :table])
             field (get-in db [:query table :show-field :name])]
         {:dispatch-n [[:query-refresh table]
-                      [:searches-refresh table]
-                      #_[:table-refresh table]
+                      [:table-refresh table]
                       (when field
                         [:field-refresh table field])]}))))
 
@@ -54,8 +53,11 @@
 
 (defn refresh-timer []
   (let [timer (js/setInterval #(rf/dispatch [:refresh]) 1000)]
-    #(js/clearInterval timer)))
+    (debugf "Refresh timer started: %s" timer)
+    (fn refresh-timer-stop []
+      (js/clearInterval timer)
+      (debugf "Refresh timer stopping: %s" timer))))
 
 (defstate timestep
   :start (refresh-timer)
-  :stop (timestep))
+  :stop (@timestep))

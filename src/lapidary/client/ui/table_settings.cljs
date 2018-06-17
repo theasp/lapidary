@@ -52,40 +52,48 @@
     [:input.input {:type :text}]]
    [:p.help [:a {:href "https://sugarjs.com/dates/#/Formatting"} "See Sugar date formatting tokens"]]])
 
-(defn saved-search [table name query]
-  (let [default? (= name "Default")]
-    [:tr
-     [:td
-      [:button
-       {:class (str "button is-small" (when default? " is-primary"))}
-       [:span.icon
-        (if default?
-          [:i.fas.fa-star]
-          [:i.far.fa-star])]]]
-     [:td name]
-     [:td
-      [:button.button.is-small.is-danger
-       [:span.icon
-        [:i.fas.fa-trash]]]]]))
+(defn saved-search [table name query default?]
+  [:tr
+   [:td
+    [:button
+     (if default?
+       {:class "button is-small is-primary"}
+       {:class    "button is-small"
+        :on-click #(rf/dispatch [:table-set-default-search table name])})
+     [:span.icon
+      (if default?
+        [:i.fas.fa-star]
+        [:i.far.fa-star])]]]
+   [:td name]
+   [:td
+    [:button.button.is-small.is-danger
+     {:on-click #(rf/dispatch [:table-search-delete table name])}
+     [:span.icon
+      [:i.fas.fa-trash]]]]])
 
 (defn searches-table [table]
-  [:div.field
-   [:label.label "Saved Searches"]
-   [:div.control
-    [:table.table
-     [:thead
-      [:tr
-       [:th]
-       [:th.is-expand "Name"]
-       [:th]]]
-     [:tbody
-      (for [[name query] @(rf/subscribe [:searches table])]
-        ^{:key name} [saved-search table name query])]]]])
+  (let [options  @(rf/subscribe [:table-options table])
+        searches @(rf/subscribe [:table-searches table])
+        default  (get options :default-search "Default")]
+    [:div.field
+     [:label.label "Saved Searches"]
+     [:div.control
+      [:table.table
+       [:thead
+        [:tr
+         [:th]
+         [:th.is-expand "Name"]
+         [:th]]]
+       [:tbody
+        (for [[name query] searches]
+          ^{:key name}
+          [saved-search table name query (= name default)])]]]]))
 
 (defn dialog-body [table]
-  [:section.modal-card-body
-   [date-format table]
-   [searches-table table]])
+  (let [table-options @(rf/subscribe [:table-options table])]
+    [:section.modal-card-body
+     [date-format table]
+     [searches-table table]]))
 
 (defn dialog [table]
   (debugf "Table settings dialog: %s" table)

@@ -16,6 +16,7 @@
  :tables
  (fn [db _]
    (->> (:tables db)
+        (vals)
         (sort-by :table_name))))
 
 (rf/reg-sub
@@ -154,9 +155,15 @@
        (js/Math.floor))))
 
 (rf/reg-sub
- :searches
+ :table-searches
  (fn [db [_ table]]
-   (->> (get-in db [:query table :searches :saved])
+   (->> (get-in db [:tables table :searches])
+        (sort-by first))))
+
+(rf/reg-sub
+ :table-options
+ (fn [db [_ table]]
+   (->> (get-in db [:tables table :options])
         (sort-by first))))
 
 (rf/reg-sub
@@ -173,3 +180,8 @@
  :login-error
  (fn [db _]
    (get-in db [:login :error])))
+
+(rf/reg-sub
+ :table-options
+ (fn [db [_ table]]
+   (get-in db [:tables table :options])))

@@ -14,26 +14,30 @@
 (def column-class "column is-3-fullhd is-4-widescreen is-4-desktop is-6-tablet")
 
 (defn list-table [view table]
-  (let [table-name (:table_name table)
-        searches   (:searches table)]
+  #_(debugf "list-table: %s" table)
+  (let [table-name     (:table_name table)
+        searches       (:searches table)
+        options        (:options table)
+        default-search (get options :default-search "Default")
+        default-query  (get searches default-search "Default")]
     [:div {:class column-class}
      [:div.hero.is-rounded.is-link.is-tall
       [:div.hero-body
        [:div.field
         [:div.control.has-text-centered
-         [:button.button.is-primary.is-large {:on-click #(rf/dispatch [:tables-query table-name (get searches "Default")])}
+         [:button.button.is-primary.is-large {:on-click #(rf/dispatch [:table-query-search table-name])}
           [:span.icon
            [:i.fas.fa-search]]
           [:span (:table_name table)]]]]
        [:div.field
         [:div.control.has-text-centered
-         (utils/byte-size-str (:table_size table))
+         (utils/byte-size-str (:size table))
          " / "
-         (utils/si-size-str (:table_rows table)) " rows"]]
+         (utils/si-size-str (:rows table)) " rows"]]
        [:div.buttons
         (for [[name query] (sort-by :search_name searches)]
           ^{:key name}
-          [:button.button {:on-click #(rf/dispatch [:tables-query table-name query])}
+          [:button.button {:on-click #(rf/dispatch [:table-query-search table-name name])}
            [:span.icon [:i.fas.fa-bookmark]]
            [:span name]])]]]]))
 
