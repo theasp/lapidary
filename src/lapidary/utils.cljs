@@ -145,7 +145,8 @@
   ([before age]
    (expired? before age (js/Date.now)))
   ([before age now]
-   (< age (- now before))))
+   (or (nil? before)
+       (< age (- now before)))))
 
 (defn stop-propogation [f]
   (fn [e]
