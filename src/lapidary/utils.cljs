@@ -174,3 +174,8 @@
   (-> (fn [m k v]
         (assoc m (apply f k args) v))
       (reduce-kv {} m)))
+
+(defn wrap-prevent-default [f]
+  (fn [event & args]
+    (apply f event args)
+    (.preventDefault event)))

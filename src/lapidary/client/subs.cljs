@@ -155,6 +155,16 @@
        (js/Math.floor))))
 
 (rf/reg-sub
+ :query-confirm-search-delete
+ (fn [db [_ table]]
+   (get-in db [:query table :confirm-search-delete])))
+
+(rf/reg-sub
+ :query-confirm-table-delete
+ (fn [db [_ table]]
+   (get-in db [:query table :confirm-table-delete])))
+
+(rf/reg-sub
  :table-searches
  (fn [db [_ table]]
    (->> (get-in db [:tables table :searches])

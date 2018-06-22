@@ -197,3 +197,24 @@
 (rf/reg-event-fx :table-search-delete table-search-delete)
 (rf/reg-event-fx :table-search-delete-ok table-search-delete-ok)
 (rf/reg-event-fx :table-search-delete-error table-search-delete-error)
+
+
+(rf/reg-event-fx
+ :table-delete
+ (fn table-delete [{:keys [db]} [_ table]]
+   {:http-xhrio (merge (api/delete-table table)
+                       {:on-success [:table-delete-ok table]
+                        :on-failure [:table-delete-error table]})}))
+
+(rf/reg-event-fx
+ :table-delete-ok
+ (fn table-delete-ok [{:keys [db]} [_ table]]
+   (debugf "table-delete-ok: %s" table)
+   {:db       (update db :tables dissoc table)
+    :dispatch [:tables-navigate]}))
+
+(rf/reg-event-fx
+ :table-delete-error
+ (fn table-delete-error [{:keys [db]} [_ table error]]
+   (debugf "table-delete-error: %s %s" table error)
+   {:dispatch [:http-error :table-search-delete error]}))

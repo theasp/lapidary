@@ -11,6 +11,7 @@
    [lapidary.client.ui.field :as field]
    [lapidary.client.ui.table-settings :as table-settings]
    [lapidary.client.ui.sidebar :as sidebar]
+   [lapidary.client.ui.confirm-dialog :as confirm-dialog]
    [re-frame.core :as rf]
    [lapidary.client.router :as router]
    [clojure.string :as str]
@@ -222,12 +223,14 @@
      [:span.icon [:i.fas.fa-list]]]))
 
 (defn view-query [view]
-  (let [table             (get-in view [:params :table])
-        page              @(rf/subscribe [:query-page table])
-        fields-visible?   @(rf/subscribe [:query-fields-visible? table])
-        settings-visible? @(rf/subscribe [:query-settings-visible? table])
-        show-field        @(rf/subscribe [:query-show-field table])
-        pages             @(rf/subscribe [:query-pages table])]
+  (let [table                 (get-in view [:params :table])
+        page                  @(rf/subscribe [:query-page table])
+        fields-visible?       @(rf/subscribe [:query-fields-visible? table])
+        settings-visible?     @(rf/subscribe [:query-settings-visible? table])
+        confirm-search-delete @(rf/subscribe [:query-confirm-search-delete table])
+        confirm-table-delete  @(rf/subscribe [:query-confirm-table-delete table])
+        show-field            @(rf/subscribe [:query-show-field table])
+        pages                 @(rf/subscribe [:query-pages table])]
     [:div
      [navbar/navbar {:brand [{:key :fields :item [fields-toggle-button table]}
                              {:key :title :item table}]}
@@ -245,12 +248,27 @@
            [:span.icon [:i.fas.fa-table]]
            [:span "Tables"]]]]]]]
      [:div.columns.is-mobile.is-flex.is-fullsize
-      (when (some? show-field)
-        [field/stream-field-dialog table])
+      (cond
+        (some? confirm-table-delete)
+        [confirm-dialog/dialog
+         {:on-ok       #(rf/dispatch [:query-confirm-table-delete-ok table])
+          :on-cancel   #(rf/dispatch [:query-confirm-table-delete-cancel table])
+          :confirm-str table}]
+
+        (some? confirm-search-delete)
+        [confirm-dialog/dialog
+         {:on-ok       #(rf/dispatch [:query-confirm-search-delete-ok table confirm-search-delete])
+          :on-cancel   #(rf/dispatch [:query-confirm-search-delete-cancel table])
+          :confirm-str confirm-search-delete}]
+
+        (some? show-field)
+        [field/stream-field-dialog table]
+
+        settings-visible?
+        [table-settings/dialog table])
+
       (when fields-visible?
         [sidebar/stream-fields table])
-      (when settings-visible?
-        [table-settings/dialog table])
       [:div.column.section.is-flex {:style {:flex-direction :column}}
        [query-form table]
        [stream-filter-tags table]

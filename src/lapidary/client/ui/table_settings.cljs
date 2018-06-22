@@ -67,9 +67,10 @@
    [:td name]
    [:td
     [:button.button.is-small.is-danger
-     {:on-click #(rf/dispatch [:table-search-delete table name])}
+     {:on-click #(rf/dispatch [:query-confirm-search-delete table name])}
      [:span.icon
       [:i.fas.fa-trash]]]]])
+
 
 (defn searches-table [table]
   (let [options  @(rf/subscribe [:table-options table])
@@ -89,9 +90,15 @@
           ^{:key name}
           [saved-search table name query (= name default)])]]]]))
 
+(defn delete-table [table]
+  [:button.button.is-danger
+   {:on-click #(rf/dispatch [:query-confirm-table-delete table])}
+   "Delete"])
+
 (defn dialog-body [table]
   (let [table-options @(rf/subscribe [:table-options table])]
     [:section.modal-card-body
+     [delete-table table]
      [date-format table]
      [searches-table table]]))
 
@@ -105,5 +112,6 @@
       [dialog-header table]
       [dialog-body table]
       [:footer.modal-card-foot {:style {:justify-content :flex-end}}
-       [:button.button.is-pulled-right {:on-click #(rf/dispatch [:query-settings-visible table false])}
+       [:button.button.is-pulled-right.is-primary
+        {:on-click #(rf/dispatch [:query-settings-visible table false])}
         "Ok"]]]]]])

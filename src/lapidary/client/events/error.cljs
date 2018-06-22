@@ -17,3 +17,9 @@
     {:dispatch [:api-error type]}))
 
 (rf/reg-event-fx :http-error http-error)
+
+
+(rf/reg-event-fx
+ :api-error
+ (fn api-error [& stuff]
+   (debugf "api-error: %s" stuff)))

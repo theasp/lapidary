@@ -299,6 +299,46 @@
 (defn query-settings-visible [db [_ table visible?]]
   (assoc-in db [:query table :settings-visible?] visible?))
 
+(rf/reg-event-fx
+ :query-confirm-search-delete
+ (fn query-confirm-search-delete [{:keys [db]} [_ table search]]
+   (debugf "query-confirm-search-delete: %s %s" table search)
+   {:db (assoc-in db [:query table :confirm-search-delete] search)}))
+
+(rf/reg-event-fx
+ :query-confirm-search-delete-ok
+ (fn query-confirm-search-delete-ok [{:keys [db]} [_ table search]]
+   (debugf "query-confirm-search-delete-ok: %s %s" table search)
+   {:dispatch [:table-search-delete table search]
+    :db       (update-in db [:query table] dissoc :confirm-search-delete)}))
+
+(rf/reg-event-fx
+ :query-confirm-search-delete-cancel
+ (fn query-confirm-search-delete-cancel [{:keys [db]} [_ table search]]
+   (debugf "query-confirm-search-delete-cancel: %s %s" table search)
+   {:db (update-in db [:query table] dissoc :confirm-search-delete)}))
+
+
+(rf/reg-event-fx
+ :query-confirm-table-delete
+ (fn query-confirm-table-delete [{:keys [db]} [_ table]]
+   (debugf "query-confirm-table-delete: %s" table)
+   {:db (assoc-in db [:query table :confirm-table-delete] true)}))
+
+(rf/reg-event-fx
+ :query-confirm-table-delete-ok
+ (fn query-confirm-table-delete-ok [{:keys [db]} [_ table]]
+   (debugf "query-confirm-table-delete-ok: %s" table)
+   {:dispatch [:table-delete table]
+    :db       (update-in db [:query table] dissoc :confirm-table-delete)}))
+
+(rf/reg-event-fx
+ :query-confirm-table-delete-cancel
+ (fn query-confirm-table-delete-cancel [{:keys [db]} [_ table]]
+   (debugf "query-confirm-table-delete-cancel: %s" table)
+   {:db (update-in db [:query table] dissoc :confirm-table-delete)}))
+
+
 (rf/reg-event-fx :query-init query-init)
 (rf/reg-event-fx :query-refresh query-refresh)
 (rf/reg-event-fx :query-load query-load)

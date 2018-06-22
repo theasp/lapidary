@@ -176,6 +176,24 @@
       (sql/sql)
       (sql-execute)))
 
+(defn delete-table-sql [table]
+  (sql/drop-table db [(keyword "public" table)]))
+
+(defn delete-table-searches-sql [table]
+  (sql/delete db :lapidary.search
+              (sql/where `(and (= :table_schema "public")
+                               (= :table_name ~table)))))
+
+(defn delete-table-options-sql [table]
+  (sql/delete db :lapidary.table_options
+              (sql/where `(and (= :table_schema "public")
+                               (= :table_name ~table)))))
+
+(defn delete-table [table]
+  (->> [(-> (delete-table-sql table) (sql/sql))
+        (-> (delete-table-searches-sql table) (sql/sql))
+        (-> (delete-table-options-sql table) (sql/sql))]
+       (sql-transaction)))
 
 (defn select-table-options [table]
   (sql/select db [:options]
