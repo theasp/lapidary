@@ -77,7 +77,6 @@
         searches @(rf/subscribe [:table-searches table])
         default  (get options :default-search "Default")]
     [:div.field
-     [:label.label "Saved Searches"]
      [:div.control
       [:table.table
        [:thead
@@ -93,14 +92,109 @@
 (defn delete-table [table]
   [:button.button.is-danger
    {:on-click #(rf/dispatch [:query-confirm-table-delete table])}
-   "Delete"])
+   "Delete Table"])
 
-(defn dialog-body [table]
-  (let [table-options @(rf/subscribe [:table-options table])]
-    [:section.modal-card-body
-     [delete-table table]
-     [date-format table]
-     [searches-table table]]))
+(defn maintenance-tab [table]
+  [:div
+   [:div.field
+    [:div.control
+     [date-format table]]]
+   [:div.field
+    [:label.label "DANGER"]
+    [:div.control
+     [delete-table table]]]])
+
+(def column-types
+  [[:auto "Auto"]
+   [:string "String"]
+   [:timestamp "Timestamp"]
+   [:integer "Integer"]
+   [:boolean "Boolean"]])
+
+(defn column-table-row [table column]
+  (let [options     @(rf/subscribe [:query-column-options table column])
+        field       @(rf/subscribe [:query-field table column])
+        column-type (or (:type options)
+                        (:type field)
+                        :auto)]
+    [:tr
+     [:td
+      (debugf "Column: %s" column)
+      [:div.buttons.has-addons
+       [:button.button
+        [:span.icon
+         [:i.fas.fa-arrow-up]]]
+
+       [:button.button
+        [:span.icon
+         [:i.fas.fa-arrow-down]]]]]
+     [:td (ui-misc/format-path column)]
+     [:td
+      [:div.field
+       [:div.control
+        [:div.select
+         [:select
+          {:value     (name column-type)
+           :on-change #(debugf "Select: %s" (-> % .-target .-value keyword))}
+          (for [[type label] column-types]
+            (let [selected? (= column-type type)]
+              ^{:key type}
+              [:option
+               {:value (name type)}
+               label]))]]]]]
+     [:td
+      [:input.input {:size 8}]]
+     [:td
+      [:input.input {:size 8}]]]))
+
+(defn columns-tab [table]
+  [:table.table
+   [:thead
+    [:tr
+     [:th]
+     [:th "Column"]
+     [:th "Type"]
+     [:th "Format"]
+     [:th "Size"]]]
+   [:tbody
+    (for [column @(rf/subscribe [:query-columns table])]
+      ^{:key column}
+      [column-table-row table column])]])
+
+
+
+(defn tabs [active-tab]
+  [:div.tabs.is-toggle.is-centered
+   [:ul
+    [:li
+     {:class (when (= :columns @active-tab) "is-active")}
+     [:a {:on-click #(reset! active-tab :columns)}
+      [:span.icon.is-small
+       [:i.fas.fa-bookmark]]
+      [:span "Columns"]]]
+    [:li
+     {:class (when (= :searches @active-tab) "is-active")}
+     [:a {:on-click #(reset! active-tab :searches)}
+      [:span.icon.is-small
+       [:i.fas.fa-bookmark]]
+      [:span "Saved Searches"]]]
+    [:li
+     {:class (when (= :maintenance @active-tab) "is-active")}
+     [:a {:on-click #(reset! active-tab :maintenance)}
+      [:span.icon.is-small
+       [:i.fas.fa-cog]]
+      [:span "Maintenance"]]]]])
+
+(defn dialog-body [_]
+  (let [active-tab (atom :columns)]
+    (fn [table]
+      (let [table-options @(rf/subscribe [:table-options table])]
+        [:section.modal-card-body
+         [tabs active-tab]
+         (case @active-tab
+           :columns     [columns-tab table]
+           :searches    [searches-table table]
+           :maintenance [maintenance-tab table])]))))
 
 (defn dialog [table]
   (debugf "Table settings dialog: %s" table)

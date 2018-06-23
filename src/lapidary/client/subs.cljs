@@ -34,6 +34,11 @@
  (fn [db [_ table]]
    (get-in db [:query table :fields])))
 
+(rf/reg-sub
+ :query-field
+ (fn [db [_ table field]]
+   (get-in db [:query table :fields field])))
+
 
 (defn sort-fields [fields]
   (->> fields
@@ -94,6 +99,11 @@
  :query-columns
  (fn [db [_ table]]
    (get-in db [:query table :columns])))
+
+(rf/reg-sub
+ :query-column-options
+ (fn [db [_ table column]]
+   (get-in db [:query table :column-options column])))
 
 (rf/reg-sub
  :query-sort-column
