@@ -26,12 +26,15 @@
       {:dispatch [:tables-refresh]}
 
       :lapidary/query-table
-      (let [table (get-in db [:view :params :table])
-            field (get-in db [:query table :show-field :name])]
+      (let [table        (get-in db [:view :params :table])
+            field        (get-in db [:query table :show-field :name])
+            expand-field (get-in db [:query table :expand-field])]
         {:dispatch-n [[:query-refresh table]
                       [:table-refresh table]
-                      (when field
-                        [:field-refresh table field])]}))))
+                      (when (and field (not= field expand-field))
+                        [:field-refresh table field])
+                      (when expand-field
+                        [:field-refresh table expand-field])]}))))
 
 (defn view-update  [{:keys [db]} [_ new-view]]
   #_(debugf "view-update: %s" new-view)

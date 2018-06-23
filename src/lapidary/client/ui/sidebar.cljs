@@ -81,10 +81,25 @@
          [:div {:style {:flex          1
                         :margin-top    :auto
                         :margin-bottom :auto}}
-          [ui-misc/popularity freq]]
+          [ui-misc/battery-icon freq]
+          #_[ui-misc/popularity freq]]
          (if used?
            [stream-field-selected-controls table name type freq]
            [stream-field-available-controls table name type freq])])]]))
+
+(defn stream-field-values-list [table name]
+  (let [values (->> @(rf/subscribe [:field-values table name])
+                    (:values)
+                    (sort-by :count)
+                    (reverse)
+                    (take 5))]
+    [:li
+     [:ul.side-panel
+      (for [value values]
+        ^{:key value}
+        [:li
+         [ui-misc/battery-icon (:percentage value)]
+         [:span (ui-misc/format-value-label (:value value))]])]]))
 
 (defn saved-query [table name]
   [:li
@@ -156,21 +171,31 @@
         total        @(rf/subscribe [:query-result-count table])
         fields       @(rf/subscribe [:query-fields-used table])]
     [:ul.menu-list
-     (for [name columns]
-       (let [{:keys [freq type]} (get fields name {:freq 0 :type nil})
-             selected?           (= name expand-field)]
-         ^{:key name}
-         [stream-field table type name selected? true (/ freq total)]))]))
+     (->> (for [name columns]
+            (let [{:keys [freq type]} (get fields name {:freq 0 :type nil})
+                  selected?           (= name expand-field)]
+              [^{:key name}
+               [stream-field table type name selected? true (/ freq total)]
+
+               (when selected?
+                 ^{:key {:type :stream-field-values :name name}}
+                 [stream-field-values-list table name])]))
+          (apply concat))]))
 
 (defn available-fields [table]
   (let [expand-field @(rf/subscribe [:query-expand-field table])
         total        @(rf/subscribe [:query-result-count table])
         fields       @(rf/subscribe [:query-fields-available table])]
     [:ul.menu-list
-     (for [[name freq type] fields]
-       (let [selected? (= name expand-field)]
-         ^{:key name}
-         [stream-field table type name selected? false (/ freq total)]))]))
+     (->> (for [[name freq type] fields]
+            (let [selected? (= name expand-field)]
+              [^{:key {:type :stream-field :name name}}
+               [stream-field table type name selected? false (/ freq total)]
+
+               (when selected?
+                 ^{:key {:type :stream-field-values :name name}}
+                 [stream-field-values-list table name])]))
+          (apply concat))]))
 
 
 (defn sidebar-label [show? label]

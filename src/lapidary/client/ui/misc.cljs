@@ -9,6 +9,43 @@
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
 
+
+(def battery-boxes
+  [[:i.fas.fa-battery-empty]
+   [:i.fas.fa-battery-quarter]
+   [:i.fas.fa-battery-half]
+   [:i.fas.fa-battery-three-quarters]
+   [:i.fas.fa-battery-full]])
+
+(def battery-colors
+  ["has-text-danger"
+   "has-text-warning"
+   "has-text-warning"
+   "has-text-warning"
+   "has-text-success"])
+
+(def battery-count (count battery-boxes))
+
+(defn battery-icon [p]
+  (let [c (-> (- battery-count 1)
+              (* p)
+              (int))]
+    [:span {:class (str "icon " (get battery-colors c))
+            :title (goog.string.format "%0.2f%" (* 100 p))}
+     (get battery-boxes c)]))
+
+(defn format-label [n value]
+  (if (< n (count value))
+    (-> (subs value 0 (- n 1))
+        (str "…"))
+    value))
+
+(defn format-value-label [value]
+  [:span {:title (str value)}
+   (cond (nil? value) [:i "<nil>"]
+         (= value "") [:i "<empty string>"]
+         :default     (format-label 24 (str value)))])
+
 (def colors ["dark" "info" "success" "warning" "danger"])
 
 (defn popularity [p]
