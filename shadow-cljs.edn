@@ -1,12 +1,13 @@
 ;; shadow-cljs configuration
 {:deps   true
- :builds {:server {:target    :node-script
-                   :output-to "target/private/js/server.js"
-                   :modules   {:server {:entries [lapidary.server]}}
-                   :main      lapidary.server/start!
-                   :devtools  {:devtools-url "https://cljs-dev.industrial.gt0.ca/shadow-cljs"
-                               :before-load  lapidary.server/stop!
-                               :after-load   lapidary.server/start!}}
+ :builds {:server {:target           :node-script
+                   :output-to        "target/private/js/server.js"
+                   :modules          {:server {:entries [lapidary.server]}}
+                   :main             lapidary.server/start!
+                   :compiler-options {:optimizations :simple}
+                   :devtools         {:devtools-url "https://cljs-dev.industrial.gt0.ca/shadow-cljs"
+                                      :before-load  lapidary.server/stop!
+                                      :after-load   lapidary.server/start!}}
           :client {:target     :browser
                    :output-dir "resources/public/js"
                    :asset-path "/js"
