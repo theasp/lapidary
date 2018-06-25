@@ -13,10 +13,10 @@
   (:require-macros
    [cljs.core.async.macros :as m :refer [go]]))
 
-(def pg
-  "The Node.js PostgreSQL client."
-  (let [package (nodejs/require "pg")]
-    (or (.-native package) package)))
+#_(def pg
+    "The Node.js PostgreSQL client."
+    (let [package (nodejs/require "pg")]
+      (or (.-native package) package)))
 
 
 #_(debugf "PG: %s" (pg.native.Pool. #js {}))
@@ -54,12 +54,12 @@
            (new js/Error)
            (throw))))
 
-  (pg.Client. #js {"host"     hostname
-                   "port"     (or port 5432)
-                   "user"     username
-                   "database" database
-                   "password" password
-                   "ssl"      (boolean ssl)}))
+  (pg/native.Client. #js {"host"     hostname
+                          "port"     (or port 5432)
+                          "user"     username
+                          "database" database
+                          "password" password
+                          "ssl"      (boolean ssl)}))
 
 (defn open-pool
   "Creates a db connection pool"
@@ -71,14 +71,14 @@
       (errorf (str param " is required"))
       (throw (new js/Error (str param " is required")))))
 
-  (pg.Pool. #js {"host"              hostname
-                 "port"              (or port 5432)
-                 "user"              username
-                 "database"          database
-                 "password"          password
-                 "ssl"               (boolean ssl)
-                 "max"               (or pool-size 20)
-                 "idleTimeoutMillis" (or idle-timeout 30000)}))
+  (pg/native.Pool. #js {"host"              hostname
+                        "port"              (or port 5432)
+                        "user"              username
+                        "database"          database
+                        "password"          password
+                        "ssl"               (boolean ssl)
+                        "max"               (or pool-size 20)
+                        "idleTimeoutMillis" (or idle-timeout 30000)}))
 
 (defn close-db!
   "Closes a db connection pool"
