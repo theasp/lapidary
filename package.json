@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "shadow-cljs": "^2.4.8",
+    "shadow-cljs": "^2.4.9",
     "source-map-support": "^0.5.6"
   },
   "dependencies": {
