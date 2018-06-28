@@ -111,21 +111,22 @@
    [:integer "Integer"]
    [:boolean "Boolean"]])
 
-(defn column-table-row [table column]
+(defn column-table-row [table pos column column-count]
   (let [options     @(rf/subscribe [:query-column-options table column])
-        field       @(rf/subscribe [:query-field table column])
-        column-type (or (:type options)
-                        (:type field)
-                        :auto)]
+        column-type (get options :type :auto)
+        width       (get options :width 12)]
     [:tr
      [:td
-      (debugf "Column: %s" column)
       [:div.buttons.has-addons
        [:button.button
+        {:disabled (= pos 0)
+         :on-click #(rf/dispatch [:query-column-left table column])}
         [:span.icon
          [:i.fas.fa-arrow-up]]]
 
        [:button.button
+        {:disabled (= pos (- column-count 1))
+         :on-click #(rf/dispatch [:query-column-right table column])}
         [:span.icon
          [:i.fas.fa-arrow-down]]]]]
      [:td (ui-misc/format-path column)]
@@ -135,49 +136,69 @@
         [:div.select
          [:select
           {:value     (name column-type)
-           :on-change #(debugf "Select: %s" (-> % .-target .-value keyword))}
+           :on-change #(rf/dispatch [:query-column-type table column (-> % .-target .-value keyword)])}
           (for [[type label] column-types]
-            (let [selected? (= column-type type)]
-              ^{:key type}
-              [:option
-               {:value (name type)}
-               label]))]]]]]
+            ^{:key type}
+            [:option {:value (name type)} label])]]]]]
      [:td
-      [:input.input {:size 8}]]
+      [:div.field
+       [:div.control
+        [:input.input
+         {:size      8
+          :value     (get options :format "")
+          :on-change #(rf/dispatch [:query-column-format table column (-> % .-target .-value)])}]]]]
      [:td
-      [:input.input {:size 8}]]]))
+      [:div.field.has-addons
+       [:div.control
+        [:button.button
+         {:on-click #(rf/dispatch [:query-column-width-dec table column])
+          :disabled (<= width 1)}
+         [:i.fas.fa-minus]]]
+       [:div.control
+        [:input.input
+         {:value     width
+          :on-change #(rf/dispatch [:query-column-width-set table column (-> % .-target .-value keyword)])
+          :size      4}]]
+       [:div.control
+        [:button.button
+         {:on-click #(rf/dispatch [:query-column-width-inc table column])}
+         [:span.icon
+          [:i.fas.fa-plus]]]]]]]))
 
-(defn columns-tab [table]
-  [:table.table
-   [:thead
-    [:tr
-     [:th]
-     [:th "Column"]
-     [:th "Type"]
-     [:th "Format"]
-     [:th "Size"]]]
-   [:tbody
-    (for [column @(rf/subscribe [:query-columns table])]
-      ^{:key column}
-      [column-table-row table column])]])
+(defn query-columns-table [table]
+  (let [columns      @(rf/subscribe [:query-columns table])
+        column-count (count columns)]
+    [:table.table
+     [:thead
+      [:tr
+       [:th]
+       [:th "Column"]
+       [:th "Type"]
+       [:th "Format"]
+       [:th "Width"]]]
+     [:tbody
+      (for [[pos column] (map-indexed vector columns)]
+        ^{:key pos}
+        [column-table-row table pos column column-count])]]))
 
-
+(defn query-tab [table]
+  [query-columns-table table])
 
 (defn tabs [active-tab]
   [:div.tabs.is-toggle.is-centered
    [:ul
     [:li
-     {:class (when (= :columns @active-tab) "is-active")}
-     [:a {:on-click #(reset! active-tab :columns)}
+     {:class (when (= :query @active-tab) "is-active")}
+     [:a {:on-click #(reset! active-tab :query)}
       [:span.icon.is-small
-       [:i.fas.fa-bookmark]]
-      [:span "Columns"]]]
+       [:i.fas.fa-search]]
+      [:span "Query"]]]
     [:li
      {:class (when (= :searches @active-tab) "is-active")}
      [:a {:on-click #(reset! active-tab :searches)}
       [:span.icon.is-small
        [:i.fas.fa-bookmark]]
-      [:span "Saved Searches"]]]
+      [:span "Searches"]]]
     [:li
      {:class (when (= :maintenance @active-tab) "is-active")}
      [:a {:on-click #(reset! active-tab :maintenance)}
@@ -186,13 +207,13 @@
       [:span "Maintenance"]]]]])
 
 (defn dialog-body [_]
-  (let [active-tab (atom :columns)]
+  (let [active-tab (atom :query)]
     (fn [table]
       (let [table-options @(rf/subscribe [:table-options table])]
         [:section.modal-card-body
          [tabs active-tab]
          (case @active-tab
-           :columns     [columns-tab table]
+           :query       [query-tab table]
            :searches    [searches-table table]
            :maintenance [maintenance-tab table])]))))
 

@@ -106,6 +106,11 @@
    (get-in db [:query table :column-options column])))
 
 (rf/reg-sub
+ :query-column-options-all
+ (fn [db [_ table]]
+   (get-in db [:query table :column-options])))
+
+(rf/reg-sub
  :query-sort-column
  (fn [db [_ table]]
    (or (get-in db [:query table :sort-column])
@@ -178,12 +183,6 @@
  :table-searches
  (fn [db [_ table]]
    (->> (get-in db [:tables table :searches])
-        (sort-by first))))
-
-(rf/reg-sub
- :table-options
- (fn [db [_ table]]
-   (->> (get-in db [:tables table :options])
         (sort-by first))))
 
 (rf/reg-sub

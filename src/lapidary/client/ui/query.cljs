@@ -87,30 +87,43 @@
          (let [value (get-in log column)
                type  (state/detect-type value)]
            ^{:key column}
-           [:td.ellipsis
+           [:td
             {:title (str value)}
             (ui-misc/format-value value type :short)]))])))
 
+(defn stream-table-header-column [table column options sort? reverse? last?]
+  (let [width (-> options (get :width 12) (str "em"))]
+    [:th {:on-click #(rf/dispatch (if sort?
+                                    [:query-sort-reverse table (not reverse?)]
+                                    [:query-sort-column table column]))
+          :style    (when-not last? {:width width})}
+     [:span (ui-misc/format-path column)]
+     (when sort?
+       [:span.icon
+        (if reverse?
+          [:i.fas.fa-chevron-down]
+          [:i.fas.fa-chevron-up])])]))
+
 (defn stream-table-header [table columns]
-  (let [sort-column @(rf/subscribe [:query-sort-column table])
-        reverse?    @(rf/subscribe [:query-reverse? table])]
+  (let [sort-column    @(rf/subscribe [:query-sort-column table])
+        reverse?       @(rf/subscribe [:query-reverse? table])
+        column-options @(rf/subscribe [:query-column-options-all table])
+        column-count   (count columns)]
     [:thead
      [:tr
-      [:th]
+      [:th {:style {:min-width "44px"
+                    :width     "44px"
+                    :max-width "44px"}}]
       (for [column columns]
-        ^{:key column}
-        [:th {:on-click #(if (= column sort-column)
-                           (rf/dispatch [:query-sort-reverse table (not reverse?)])
-                           (rf/dispatch [:query-sort-column table column]))}
-         [:span (ui-misc/format-path column)]
-         (if (= column sort-column)
-           [:span.icon
-            (if reverse?
-              [:i.fas.fa-chevron-down]
-              [:i.fas.fa-chevron-up])])])]]))
+        (let [sort?   (= sort-column column)
+              last?   (= column (last columns))
+              options (merge {:width 12} (get column-options column))]
+          ^{:key column}
+          [stream-table-header-column table column options sort? reverse? last?]))]]))
 
 (defn stream-table-body [table columns]
-  (let [expand-log @(rf/subscribe [:query-expand-log table])]
+  (let [expand-log     @(rf/subscribe [:query-expand-log table])
+        column-options @(rf/subscribe [:query-column-options-all table])]
     [:tbody
      (for [log @(rf/subscribe [:query-logs table])
            f   [:entry :record]]
@@ -121,12 +134,11 @@
              :entry  [stream-entry table log columns selected?]
              :record (when (= expand-log (get log ui-misc/id-column))
                        [stream-detail table log columns]))
-           {:key {:f  f
-                  :id id}})))]))
+           {:key {:f f :id id}})))]))
 
 (defn stream-table [table]
   (let [columns @(rf/subscribe [:query-columns table])]
-    [:table.table.is-hoverable.is-wide
+    [:table.table.is-hoverable.is-wide.is-fixed
      [stream-table-header table columns]
      [stream-table-body table columns]]))
 
@@ -177,7 +189,7 @@
         parse-query (-> #(swap! state assoc :query-parsed (query/query-parse %))
                         (utils/debounce 250))]
     #_(debugf "FORM A: %s" @state)
-    (fn []
+    (fn [table]
       (let [{:keys [query-str start-str end-str query-parsed]} @state
 
             parsed-ok? (not (map? query-parsed))

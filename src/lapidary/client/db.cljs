@@ -45,7 +45,7 @@
      (select-keys b same-query-keys)))
 
 (def query-params
-  (-> #{:columns :expand-log :show-field}
+  (-> #{:columns :expand-log :show-field :column-options}
       (concat same-query-keys)))
 
 (defn query-defaults [query]
@@ -59,7 +59,6 @@
 (defn login-ok? [db]
   (let [login (:login db)
         jwt   (:jwt login)]
-    #_(debugf "LOGIN: %s" (some? jwt))
     (and (some? jwt))))
 
 (defn put-table [db table]

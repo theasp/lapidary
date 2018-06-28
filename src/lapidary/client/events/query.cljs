@@ -343,6 +343,48 @@
    {:db (update-in db [:query table] dissoc :confirm-table-delete)}))
 
 
+(rf/reg-event-fx
+ :query-column-width-dec
+ (fn query-column-width-dec [{:keys [db]} [_ table column]]
+   (router/query-navigate! table
+                           (-> (get-in db [:view :query])
+                               (update-in [:column-options column :width]
+                                          #(-> (or % 12) (dec) (max 1)))))
+   nil))
+
+(rf/reg-event-fx
+ :query-column-width-inc
+ (fn query-column-width-inc [{:keys [db]} [_ table column]]
+   (router/query-navigate! table
+                           (-> (get-in db [:view :query])
+                               (update-in [:column-options column :width]
+                                          #(-> (or % 12) (inc)))))
+   nil))
+
+(rf/reg-event-fx
+ :query-column-width-set
+ (fn query-column-width-set [{:keys [db]} [_ table column width]]
+   (router/query-navigate! table
+                           (-> (get-in db [:view :query])
+                               (assoc-in [:column-options column :width] width)))
+   nil))
+
+(rf/reg-event-fx
+ :query-column-type
+ (fn query-column-width-set [{:keys [db]} [_ table column type]]
+   (router/query-navigate! table
+                           (-> (get-in db [:view :query])
+                               (assoc-in [:column-options column :type] type)))
+   nil))
+
+(rf/reg-event-fx
+ :query-column-format
+ (fn query-column-width-set [{:keys [db]} [_ table column format]]
+   (router/query-navigate! table
+                           (-> (get-in db [:view :query])
+                               (assoc-in [:column-options column :format] format)))
+   nil))
+
 (rf/reg-event-fx :query-init query-init)
 (rf/reg-event-fx :query-refresh query-refresh)
 (rf/reg-event-fx :query-load query-load)
