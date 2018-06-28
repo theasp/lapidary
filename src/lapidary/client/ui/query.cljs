@@ -12,6 +12,7 @@
    [lapidary.client.ui.table-settings :as table-settings]
    [lapidary.client.ui.sidebar :as sidebar]
    [lapidary.client.ui.confirm-dialog :as confirm-dialog]
+   [lapidary.client.ui.activity-indicator :as activity-indicator]
    [re-frame.core :as rf]
    [lapidary.client.router :as router]
    [clojure.string :as str]
@@ -237,6 +238,8 @@
       [:div.navbar-end
        [:div.navbar-item
         [:div.field.is-grouped
+         [:p.control
+          [activity-indicator/spinner]]
          [:p.control
           [:a.button.is-white
            {:on-click #(rf/dispatch [:query-settings-visible table true])}

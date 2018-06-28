@@ -205,3 +205,8 @@
  :table-options
  (fn [db [_ table]]
    (get-in db [:tables table :options])))
+
+(rf/reg-sub
+ :active-connections
+ (fn [db [_ protocol]]
+   (db/active-connections db protocol)))

@@ -5,6 +5,7 @@
    [lapidary.client.state :as state]
    [lapidary.client.api :as api]
    [lapidary.client.db :as db]
+   [lapidary.client.ui.activity-indicator :as activity-indicator]
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]
    [re-frame.core :as rf]
@@ -96,7 +97,12 @@
 
 (defn list-tables [view]
   [:div
-   [navbar/navbar {:brand [{:key :title :item "Tables"}]} nil]
+   [navbar/navbar {:brand [{:key :title :item "Tables"}]}
+    [:div.navbar-end
+     [:div.navbar-item
+      [:div.field.is-grouped
+       [:p.control
+        [activity-indicator/spinner]]]]]]
    [:section.section
     [:div.columns.is-multiline
      (for [table @(rf/subscribe [:tables])]

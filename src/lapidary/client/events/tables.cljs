@@ -39,7 +39,9 @@
   (when (db/table-load? db table-name)
     (debugf "table-load: %s" table-name)
     (let [query (api/get-table table-name)]
-      {:db         (assoc-in db [:tables table-name :loading?] true)
+      {:db         (-> db
+                       (update-in [:connections :http :table-load] inc)
+                       (assoc-in [:tables table-name :loading?] true))
        :http-xhrio (merge query
                           {:on-success [:table-load-ok table-name]
                            :on-failure [:table-load-error table-name]})})))
@@ -47,7 +49,9 @@
 (defn table-load-ok [db [_ table-name result]]
   (debugf "table-load-ok: Table: %s  DB Time: %s" table-name (:time result))
   (let [table (-> result :result :rows walk/keywordize-keys first result->table)]
-    (db/put-table db table)))
+    (-> db
+        (update-in [:connections :http :table-load] dec)
+        (db/put-table table))))
 
 (defn table-load-error [{:keys [db]} [_ table-name error]]
   (errorf "tables-load-error: %s %s" table-name error)
@@ -71,7 +75,9 @@
 (defn tables-load [{:keys [db]} _]
   (when (db/tables-load? db)
     (debugf "tables-load")
-    {:db         (assoc db :tables-loading? true)
+    {:db         (-> db
+                     (update-in [:connections :http :tables-load] inc)
+                     (assoc :tables-loading? true))
      :http-xhrio (merge (api/get-tables)
                         {:on-success [:tables-load-ok]
                          :on-failure [:tables-load-error]})}))
@@ -79,19 +85,21 @@
 (defn tables-load-ok [db [_ tables]]
   (let [tables (-> tables :result :rows walk/keywordize-keys results->tables)]
     (debugf "tables-load-ok: %s tables" (count tables))
-    (merge db {:tables          tables
-               :tables-time     (js/Date.now)
-               :tables-loading? false
-               :tables-error    nil})))
+    (-> db
+        (update-in [:connections :http :tables-load] dec)
+        (merge {:tables          tables
+                :tables-time     (js/Date.now)
+                :tables-loading? false
+                :tables-error    nil}))))
 
 (defn tables-load-error [{:keys [db]} [_ error]]
   (errorf "tables-load-error: %s" error)
   {:dispatch [:http-error :tables-load error]
-   :db       (merge db {:tables-time     (js/Date.now)
-                        :tables-loading? false
-                        :tables-error    error})})
-
-
+   :db       (-> db
+                 (update-in [:connections :http :tables-load] dec)
+                 (merge {:tables-time     (js/Date.now)
+                         :tables-loading? false
+                         :tables-error    error}))})
 
 
 (defn table-set-default-search [{:keys [db]} [_ table-name search]]
@@ -134,7 +142,9 @@
 (defn tables-create [{:keys [db]} [_ name]]
   (debugf "tables-create: %s" name)
   (when (and (db/table-name-ok? name))
-    {:db         (assoc db :tables-creating? true)
+    {:db         (-> db
+                     (update-in [:connections :http :tables-create] inc)
+                     (assoc :tables-creating? true))
      :http-xhrio (-> (api/create-log-table name)
                      (merge {:on-success [:tables-create-ok name]
                              :on-failure [:tables-create-error name]}))}))
@@ -142,14 +152,17 @@
 (defn tables-create-ok [db [_ name result]]
   (debugf "table created: %s" name)
   (-> db
+      (update-in [:connections :http :tables-create] dec)
       (update :tables conj {:table_name name})
       (merge {:tables-creating?    false
               :tables-create-error nil})))
 
 (defn tables-create-error [{:keys [db]} [_ name error]]
   (errorf "tables-create-error: %s %s" name error)
-  {:db       (merge db {:tables-creating?    false
-                        :tables-create-error error})
+  {:db       (-> db
+                 (update-in [:connections :http :tables-create] dec)
+                 (merge {:tables-creating?    false
+                         :tables-create-error error}))
    :dispatch [:http-error :tables-create error]})
 
 (rf/reg-event-fx :tables-create tables-create)
@@ -159,21 +172,26 @@
 
 (defn table-set-options [{:keys [db]} [_ table-name options]]
   (debugf "table-set-options: %s" table-name options)
-  {:db         (assoc-in db [:tables table-name :options] options)
+  {:db         (-> db
+                   (update-in [:connections :http :table-set-options] inc)
+                   (assoc-in [:tables table-name :options] options))
    :http-xhrio (-> (api/save-table-options table-name options)
                    (merge {:on-success [:table-set-options-ok table-name]
                            :on-failure [:table-set-options-error table-name]}))})
 
 (defn table-set-options-ok [{:keys [db]} [_ table-name result]]
-  (debugf "table-set-options-ok: %s %s" table-name result))
+  (debugf "table-set-options-ok: %s %s" table-name result)
+  {:db (update-in db [:connections :http :table-set-options] dec)})
 
 (defn table-set-options-error [{:keys [db]} [_ table-name error]]
   (errorf "table-set-options-error: %s %s" table-name error)
   {:dispatch [:http-error :table-load error]
-   :db       (update-in db [:tables table-name] merge
-                        {:time     (js/Date.now)
-                         :loading? false
-                         :error    error})})
+   :db       (-> db
+                 (update-in [:connections :http :table-set-options] dec)
+                 (update-in [:tables table-name] merge
+                            {:time     (js/Date.now)
+                             :loading? false
+                             :error    error}))})
 
 (rf/reg-event-fx :table-set-default-search table-set-default-search)
 (rf/reg-event-fx :table-set-options table-set-options)
@@ -182,17 +200,21 @@
 
 (defn table-search-delete [{:keys [db]} [_ table search]]
   (debugf "table-search-delete: %s %s" table search)
-  {:db         (update-in db [:tables table :searches] dissoc search)
+  {:db         (-> db
+                   (update-in [:connections :http :table-search-delete] inc)
+                   (update-in [:tables table :searches] dissoc search))
    :http-xhrio (merge (api/delete-table-search table search)
                       {:on-success [:table-search-delete-ok table search]
                        :on-failure [:table-search-delete-error table search]})})
 
 (defn table-search-delete-ok [{:keys [db]} [_ table search]]
-  (debugf "table-search-delete-ok: %s %s" table search))
+  (debugf "table-search-delete-ok: %s %s" table search)
+  {:db (update-in db [:connections :http :table-search-delete] dec)})
 
 (defn table-search-delete-error [{:keys [db]} [_ table search error]]
   (errorf "table-search-delete-error: %s %s %s" table search error)
-  {:dispatch [:http-error :table-search-delete error]})
+  {:dispatch [:http-error :table-search-delete error]
+   :db       (update-in db [:connections :http :table-search-delete] dec)})
 
 (rf/reg-event-fx :table-search-delete table-search-delete)
 (rf/reg-event-fx :table-search-delete-ok table-search-delete-ok)
@@ -204,17 +226,21 @@
  (fn table-delete [{:keys [db]} [_ table]]
    {:http-xhrio (merge (api/delete-table table)
                        {:on-success [:table-delete-ok table]
-                        :on-failure [:table-delete-error table]})}))
+                        :on-failure [:table-delete-error table]})
+    :db         (update-in db [:connections :http :table-delete] inc)}))
 
 (rf/reg-event-fx
  :table-delete-ok
  (fn table-delete-ok [{:keys [db]} [_ table]]
    (debugf "table-delete-ok: %s" table)
-   {:db       (update db :tables dissoc table)
+   {:db       (-> db
+                  (update-in [:connections :http :table-delete] dec)
+                  (update :tables dissoc table))
     :dispatch [:tables-navigate]}))
 
 (rf/reg-event-fx
  :table-delete-error
  (fn table-delete-error [{:keys [db]} [_ table error]]
    (debugf "table-delete-error: %s %s" table error)
-   {:dispatch [:http-error :table-search-delete error]}))
+   {:db       (update-in db [:connections :http :table-delete] dec)
+    :dispatch [:http-error :table-search-delete error]}))

@@ -96,3 +96,7 @@
 (defn tables-load? [db]
   (and (login-ok? db)
        (not (tables-loading? db))))
+
+(defn active-connections [db protocol]
+  (->> (get-in db [:connections protocol])
+       (remove #(-> (second %) (= 0)))))

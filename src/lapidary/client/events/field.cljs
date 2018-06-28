@@ -33,7 +33,7 @@
           end-time     (sugar/parse-time end-str)
           where        (->> (when-not all-values? (query/query->where query-str))
                             (query/query-filters nil start-time end-time filters))]
-      {:db         db
+      {:db         (update-in db [:connections :http :field-load] inc)
        :http-xhrio (-> (api/query-field-values table field offset page-size where)
                        (merge {:on-success [:field-load-ok table field field-id]
                                :on-failure [:field-load-error table field field-id]}))})))
@@ -61,19 +61,22 @@
   #_(debugf "field-load-ok: %s" (-> result :result :rows first ))
   (if (= id (get-in db [:query table :field-values field :id]))
     (let [result (-> result :result :rows first walk/keywordize-keys)]
-      (update-in db [:query table :field-values field] merge
-                 {:count    (:count result)
-                  :values   (:body result)
-                  :time     (js/Date.now)
-                  :error    nil
-                  :loading? false}))
-    db))
+      (-> db
+          (update-in [:connections :http :field-load] dec)
+          (update-in [:query table :field-values field] merge
+                     {:count    (:count result)
+                      :values   (:body result)
+                      :time     (js/Date.now)
+                      :error    nil
+                      :loading? false})))
+    (update-in db [:connections :http :field-load] dec)))
 
 (defn field-load-error [{:keys [db]} [_ table field id error]]
   (errorf "field-load-error: %s %s %s" table field error)
-  (when (= id (get-in db [:query table :field-values field :id]))
+  (if (= id (get-in db [:query table :field-values field :id]))
     {:dispatch [:http-error :field-load error]
-     :db       db}))
+     :db       (update-in db [:connections :http :field-load] dec)}
+    {:db (update-in db [:connections :http :field-load] dec)}))
 
 (defn field-refresh [{:keys [db]} [_ table field]]
   (let [{:keys [time loading?]} (get-in db [:query table :field-values field])]

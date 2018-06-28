@@ -30,6 +30,7 @@
   (when (and (not (get-in db [:query table :searches :loading?]))
              (db/login-ok? db))
     (let [db (-> db
+                 (update-in [:connections :http :searches-load] inc)
                  (update-in [:query table :searches :id] inc)
                  (assoc-in [:query table :searches :loading?] true))
           id (get-in db [:query table :searches :id])]
@@ -75,26 +76,31 @@
 (defn searches-load-ok [{:keys [db]} [_ id table result]]
   (debugf "searches-load-ok: %s" result)
   (when (= id (get-in db [:query table :searches :id]))
-    {:db (update-in db [:query table :searches] merge
-                    {:saved    (result->searches result)
-                     :time     (js/Date.now)
-                     :loading? false
-                     :error    nil})}))
+    {:db (-> db
+             (update-in [:connections :http :searches-load] dec)
+             (update-in [:query table :searches] merge
+                        {:saved    (result->searches result)
+                         :time     (js/Date.now)
+                         :loading? false
+                         :error    nil}))}))
 
 (defn searches-load-error [{:keys [db]} [_ id table error]]
   (errorf "searches-load-error: %s" error)
   (when (= id (get-in db [:query table :searches :id]))
     {:dispatch [:http-error :searches-load error]
-     :db       (update-in db [:query table :searches] merge
-                          {:time     (js/Date.now)
-                           :loading? false
-                           :error    error})}))
+     :db       (-> db
+                   (update-in [:connections :http :searches-load] dec)
+                   (update-in [:query table :searches] merge
+                              {:time     (js/Date.now)
+                               :loading? false
+                               :error    error}))}))
 
 (defn search->json [search]
   (-> search
       (update :filters filters->json)))
 
 (defn searches-save [{:keys [db]} [_ table name]]
+  (debugf "searches-save: %s %s" table name)
   (when (and (some? table)
              (not (str/blank? table))
              (some? name)
@@ -105,15 +111,21 @@
                       (search->json))]
       {:http-xhrio (merge (api/save-search table name options)
                           {:on-success [:searches-save-ok table name options]
-                           :on-failure [:searches-save-error table name]})})))
+                           :on-failure [:searches-save-error table name]})
+       :db         (update-in db [:connections :http :searches-save] inc)})))
 
 (defn searches-save-ok [{:keys [db]} [_ table name options result]]
-  {:db       (assoc-in db [:query table :searches :saved name] options)
+  (debugf "searches-save-ok: %s %s" table name)
+  {:db       (-> db
+                 (update-in [:connections :http :searches-save] dec)
+                 (assoc-in [:query table :searches :saved name] options))
    :dispatch [:table-load table]})
 
 (defn searches-save-error [{:keys [db]} [_ table name error]]
-  (errorf "searches-save: %s %s %s" table name error)
-  {:db       (update-in db [:query table :searches :saved] dissoc name)
+  (errorf "searches-save-error: %s %s %s" table name error)
+  {:db       (-> db
+                 (update-in [:connections :http :searches-save] dec)
+                 (update-in [:query table :searches :saved] dissoc name))
    :dispatch [:http-error :searches-save error]})
 
 (rf/reg-event-fx :searches-refresh searches-refresh)

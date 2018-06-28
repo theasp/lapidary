@@ -119,7 +119,7 @@
                  (update-in [:query table :id] inc)
                  (assoc-in [:query table :loading?] true))
           id (get-in db [:query table :id])]
-      {:db         db
+      {:db         (update-in db [:connections :http :query-load] inc)
        :http-xhrio (-> (query/execute-query table (get-in db [:query table]))
                        (merge {:on-success [:query-load-ok table id]
                                :on-failure [:query-load-error table id]}))})))
@@ -129,22 +129,26 @@
     (let [{:keys [logs stats]} (-> result :result :rows first walk/keywordize-keys)]
       (debugf "query-load-ok: Table: %s  Logs: %s  Stats: %s  DB Time: %s" table (count logs) (count stats) (:time result))
       (-> db
+          (update-in [:connections :http :query-load] dec)
           (update-in [:query table] add-logs logs)
           (update-in [:query table] add-fields stats)
           (update-in [:query table] merge {:time     (js/Date.now)
                                            :loading? false
                                            :error    nil})))
 
-    db))
+    (update-in db [:connection :http :query-load] dec)))
 
 (defn query-load-error [{:keys [db]} [_ table query-id error]]
   (errorf "query-load-error: %s" table error)
-  (when (= query-id (get-in db [:query table :id]))
+  (if (= query-id (get-in db [:query table :id]))
     {:dispatch [:http-error :query-load error]
-     :db       (update-in db [:query table] merge
-                          {:time     (js/Date.now)
-                           :loading? false
-                           :error    error})}))
+     :db       (-> db
+                   (update-in [:connections :http :query-load] dec)
+                   (update-in [:query table] merge
+                              {:time     (js/Date.now)
+                               :loading? false
+                               :error    error}))}
+    {:db (update-in db [:connection :http :query-load] dec)}))
 
 (defn query-page-next [db [_ table]]
   (let [{:keys [page pages]} (get-in db [:query table])]
