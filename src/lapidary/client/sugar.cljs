@@ -12,6 +12,9 @@
 (defn format-long [time]
   (.format time "{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}.{SSS} %Z"))
 
+(defn format [fmt time]
+  (.format time fmt))
+
 (defn parse-valid? [time]
   (sugar-date/Date.isValid time))
 

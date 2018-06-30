@@ -21,7 +21,7 @@
     :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn stream-detail-value [table field value selected? set-selected column?]
-  (let [type (state/detect-type value)]
+  (let [type (utils/detect-type value)]
     [:div.control
      [:div.tags.has-addons.buttons
       [:a {:class    (str "tag " (if column? "is-primary" "is-link"))
@@ -67,12 +67,29 @@
              ^{:key field}
              [stream-detail-value table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]]]))))
 
-(defn stream-entry [table log columns selected?]
+(def format-defaults
+  {:integer   "%d"
+   :number    "%f"
+   :timestamp "{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}.{SSS}"})
+
+(def format-fns
+  {:timestamp #(sugar/format %1 (sugar/parse-time %2))})
+
+(defn format-value [value value-type fmt]
+  (let [f   (get format-fns value-type goog.string/format)
+        fmt (if (or (nil? fmt) (= fmt ""))
+              (get format-defaults value-type "%s")
+              fmt)]
+    #_(debugf "Value-Type %s  Object %s" value-type (type value))
+    (f fmt value)))
+
+
+(defn stream-entry [table log columns selected? column-options]
   (let [checked? (atom false)
         check-fn (fn [e]
                    (swap! checked? not)
                    (.stopPropagation e))]
-    (fn [table log columns selected?]
+    (fn [table log columns selected? column-options]
       [:tr {:on-click #(rf/dispatch [:query-expand-log table (if selected? nil (get log ui-misc/id-column))])
             :class    (when selected? "is-selected is-link is-unselectable")}
        [:td
@@ -84,12 +101,15 @@
             [:i.fas.fa-check]
             " ")]]]
        (for [column columns]
-         (let [value (get-in log column)
-               type  (state/detect-type value)]
+         (let [value   (get-in log column)
+               options (get column-options column)
+               type    (-> (get options :type :auto)
+                           (utils/update-type value))
+               fmt     (get options :format "")]
            ^{:key column}
-           [:td
-            {:title (str value)}
-            (ui-misc/format-value value type :short)]))])))
+           [:td {:title (str value)}
+            #_(js/console.log value)
+            (format-value value type fmt)]))])))
 
 (defn stream-table-header-column [table column options sort? reverse? last?]
   (let [width (-> options (get :width 12) (str "em"))]
@@ -131,7 +151,7 @@
              selected? (= id expand-log)]
          (with-meta
            (case f
-             :entry  [stream-entry table log columns selected?]
+             :entry  [stream-entry table log columns selected? column-options]
              :record (when (= expand-log (get log ui-misc/id-column))
                        [stream-detail table log columns]))
            {:key {:f f :id id}})))]))
