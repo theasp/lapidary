@@ -179,3 +179,22 @@
   (fn [event & args]
     (apply f event args)
     (.preventDefault event)))
+
+(defn detect-type [v]
+  (cond
+    (nil? v)     :nil
+    (boolean? v) :boolean
+    (string? v)  :string
+    (integer? v) :integer
+    (number? v)  :number
+    (inst? v)    :timestamp
+    (vector? v)  :vector
+    (seq? v)     :seq
+    (map? v)     :map
+    (object? v)  :object
+    :default     :unknown))
+
+(defn update-type [cur v]
+  (if (or (nil? cur) (= :auto cur))
+    (detect-type v)
+    cur))
