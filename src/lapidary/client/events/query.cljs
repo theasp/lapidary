@@ -7,6 +7,7 @@
    [lapidary.client.db :as db]
    [lapidary.client.query :as query]
    [lapidary.client.router :as router]
+   [lapidary.client.format-value :as format-value]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
    [taoensso.timbre :as timbre
@@ -374,7 +375,9 @@
  (fn query-column-width-set [{:keys [db]} [_ table column type]]
    (router/query-navigate! table
                            (-> (get-in db [:view :query])
-                               (assoc-in [:column-options column :type] type)))
+                               (assoc-in [:column-options column :type] type)
+                               (assoc-in [:column-options column :format]
+                                         (get-in format-value/formats [type :fmt]))))
    nil))
 
 (rf/reg-event-fx

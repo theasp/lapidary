@@ -108,7 +108,9 @@
   [[:auto "Auto"]
    [:string "String"]
    [:timestamp "Timestamp"]
+   [:timestamp-utc "Timestamp (UTC)"]
    [:integer "Integer"]
+   [:number "Number"]
    [:boolean "Boolean"]])
 
 (defn column-table-row [table pos column column-count]
@@ -141,12 +143,13 @@
             ^{:key type}
             [:option {:value (name type)} label])]]]]]
      [:td
-      [:div.field
-       [:div.control
-        [:input.input
-         {:size      8
-          :value     (get options :format "")
-          :on-change #(rf/dispatch [:query-column-format table column (-> % .-target .-value)])}]]]]
+      (when-not (= column-type :auto)
+        [:div.field
+         [:div.control
+          [:input.input
+           {:size      8
+            :value     (get options :format "")
+            :on-change #(rf/dispatch [:query-column-format table column (-> % .-target .-value)])}]]])]
      [:td
       [:div.field.has-addons
        [:div.control

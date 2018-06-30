@@ -5,6 +5,7 @@
    [lapidary.client.state :as state]
    [lapidary.client.sugar :as sugar]
    [lapidary.client.query :as query]
+   [lapidary.client.format-value :as format-value]
    [lapidary.client.ui.misc :as ui-misc]
    [lapidary.client.ui.navbar :as navbar]
    [lapidary.client.ui.pagination :as pagination]
@@ -67,22 +68,6 @@
              ^{:key field}
              [stream-detail-value table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]]]))))
 
-(def format-defaults
-  {:integer   "%d"
-   :number    "%f"
-   :timestamp "{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}.{SSS}"})
-
-(def format-fns
-  {:timestamp #(sugar/format %1 (sugar/parse-time %2))})
-
-(defn format-value [value value-type fmt]
-  (let [f   (get format-fns value-type goog.string/format)
-        fmt (if (or (nil? fmt) (= fmt ""))
-              (get format-defaults value-type "%s")
-              fmt)]
-    #_(debugf "Value-Type %s  Object %s" value-type (type value))
-    (f fmt value)))
-
 
 (defn stream-entry [table log columns selected? column-options]
   (let [checked? (atom false)
@@ -109,7 +94,7 @@
            ^{:key column}
            [:td {:title (str value)}
             #_(js/console.log value)
-            (format-value value type fmt)]))])))
+            (format-value/format value type fmt)]))])))
 
 (defn stream-table-header-column [table column options sort? reverse? last?]
   (let [width (-> options (get :width 12) (str "em"))]
