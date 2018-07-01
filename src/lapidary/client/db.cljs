@@ -5,7 +5,6 @@
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
 
-
 (def table-expiry (* 60 1000))
 (def tables-expiry (* 30 1000))
 
