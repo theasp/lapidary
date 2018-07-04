@@ -26,7 +26,7 @@
 (defn format-timestamp-utc [fmt time]
   (try
     (when (some? time)
-      (let [time (sugar-date/Date.utc.create time)]
+      (let [time (sugar-date/Date.create time #js {:fromUTC true :setUTC true})]
         (.format time fmt)))
     (catch js/Object e
       (warnf "Unable to format time: %s" e)
