@@ -16,18 +16,20 @@
    :connected? false})
 
 (def default-query
-  {:query-str   ""
-   :start-str   "2 hours ago"
-   :end-str     "now"
-   :columns     [[:time] [:record :hostname] [:record :message]]
-   :sort-column [:time]
-   :show-field  nil
-   :filters     {:require {}
-                 :exclude {}}
-   :expand-log  nil
-   :page        0
-   :page-size   25
-   :reverse?    true})
+  {:query-str      ""
+   :start-str      "2 hours ago"
+   :end-str        "now"
+   :columns        [[:time] [:record :hostname] [:record :message]]
+   :column-options {[:time] {:width 16
+                             :type  :timestamp}}
+   :sort-column    [:time]
+   :show-field     nil
+   :filters        {:require {}
+                    :exclude {}}
+   :expand-log     nil
+   :page           0
+   :page-size      25
+   :reverse?       true})
 
 (def search-keys
   #{:query-str :end-str :start-str :reverse? :filters :sort-column})
