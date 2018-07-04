@@ -45,7 +45,7 @@
    :number        {:name "Number"
                    :fn   format-value
                    :fmt  "%f"}
-   :integer       {:name "Number"
+   :integer       {:name "Integer"
                    :fn   format-value
                    :fmt  "%d"}
    :timestamp     {:name "Timestamp"
