@@ -4,6 +4,7 @@
    [lapidary.client.state :as state]
    [lapidary.client.sugar :as sugar]
    [lapidary.client.query :as query]
+   [lapidary.client.format-value :as format-value]
    [lapidary.client.ui.misc :as ui-misc]
    [lapidary.client.ui.navbar :as navbar]
    [lapidary.client.ui.dialog :as dialog]
@@ -104,15 +105,6 @@
     [:div.control
      [delete-table table]]]])
 
-(def column-types
-  [[:auto "Auto"]
-   [:string "String"]
-   [:timestamp "Timestamp"]
-   [:timestamp-utc "Timestamp (UTC)"]
-   [:integer "Integer"]
-   [:number "Number"]
-   [:boolean "Boolean"]])
-
 (defn column-table-row [table pos column column-count]
   (let [options     @(rf/subscribe [:query-column-options table column])
         column-type (get options :type :auto)
@@ -139,9 +131,9 @@
          [:select
           {:value     (name column-type)
            :on-change #(rf/dispatch [:query-column-type table column (-> % .-target .-value keyword)])}
-          (for [[type label] column-types]
+          (for [[type format] (sort-by first format-value/formats)]
             ^{:key type}
-            [:option {:value (name type)} label])]]]]]
+            [:option {:value (name type)} (:name format)])]]]]]
      [:td
       (when-not (= column-type :auto)
         [:div.field
