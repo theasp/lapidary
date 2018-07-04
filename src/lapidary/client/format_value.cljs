@@ -56,9 +56,8 @@
                    :fmt  "{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}.{SSS} UTC"}})
 
 (defn format [value value-type fmt]
-  (let [format    (get formats value-type)
+  (let [format    (get formats value-type (:auto formats))
         format-fn (:fn format)]
-    #_(debugf "Value-Type %s  Object %s" value-type (type value))
     (format-fn (if (or (nil? fmt) (= fmt ""))
                  (:fmt format)
                  fmt)
