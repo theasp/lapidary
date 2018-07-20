@@ -57,8 +57,8 @@
 
 (defn format [value value-type fmt]
   (let [format    (get formats value-type (:auto formats))
-        format-fn (:fn format)]
-    (format-fn (if (or (nil? fmt) (= fmt ""))
-                 (:fmt format)
-                 fmt)
-               value)))
+        format-fn (:fn format)
+        fmt       (if (or (nil? fmt) (= fmt ""))
+                    (:fmt format)
+                    fmt)]
+    (format-fn fmt value)))

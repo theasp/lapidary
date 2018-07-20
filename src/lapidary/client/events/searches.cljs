@@ -61,10 +61,22 @@
                              (remove (comp empty? second))
                              (map identity)))))
 
+(defn build-column-options [options columns]
+  (reduce (fn [m k] (update-in m [k :type] keyword))
+          (zipmap columns options)
+          columns))
+
+(defn json->column-options [search]
+  (update search :column-options build-column-options (:columns search)))
+
 (defn add-search [searches search]
   (assoc searches (:search_name search)
          (-> (:options search)
              (update :columns keywordize-all)
+             (update :columns vec)
+             (update :sort-column #(-> (map keyword %)
+                                       (vec)))
+             (json->column-options)
              (update :filters json->filters))))
 
 (defn result->searches [result]
@@ -96,8 +108,10 @@
                                :error    error}))}))
 
 (defn search->json [search]
-  (-> search
-      (update :filters filters->json)))
+  (-> (select-keys search db/save-search-keys)
+      (update :filters filters->json)
+      (assoc :column-options (-> (:column-options search)
+                                 (map (:columns search))))))
 
 (defn searches-save [{:keys [db]} [_ table name]]
   (debugf "searches-save: %s %s" table name)
@@ -107,8 +121,7 @@
              (not (str/blank? name))
              (db/login-ok? db))
     (let [query   (get-in db [:query table])
-          options (-> (select-keys query [:query-str :start-str :end-str :columns :filters])
-                      (search->json))]
+          options (search->json query)]
       {:http-xhrio (merge (api/save-search table name options)
                           {:on-success [:searches-save-ok table name options]
                            :on-failure [:searches-save-error table name]})

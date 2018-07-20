@@ -23,3 +23,9 @@
     (sugar-date/Date.create time)
     (catch js/Object e
       (debugf "Unable to parse '%s': %s" time e))))
+
+(defn parse-time-utc [time]
+  (try
+    (sugar-date/Date.utc.create time)
+    (catch js/Object e
+      (debugf "Unable to parse '%s': %s" time e))))

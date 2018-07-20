@@ -107,8 +107,8 @@
 
 (defn column-table-row [table pos column column-count]
   (let [options     @(rf/subscribe [:query-column-options table column])
-        column-type (get options :type :auto)
-        width       (get options :width 12)]
+        column-type (or (get options :type) :auto)
+        width       (or (get options :width) 12)]
     [:tr
      [:td
       [:div.buttons.has-addons
