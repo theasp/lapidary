@@ -198,27 +198,29 @@
 (rf/reg-event-fx :table-set-options-ok table-set-options-ok)
 (rf/reg-event-fx :table-set-options-error table-set-options-error)
 
-(defn table-search-delete [{:keys [db]} [_ table search]]
-  (debugf "table-search-delete: %s %s" table search)
-  {:db         (-> db
-                   (update-in [:connections :http :table-search-delete] inc)
-                   (update-in [:tables table :searches] dissoc search))
-   :http-xhrio (merge (api/delete-table-search table search)
-                      {:on-success [:table-search-delete-ok table search]
-                       :on-failure [:table-search-delete-error table search]})})
 
-(defn table-search-delete-ok [{:keys [db]} [_ table search]]
-  (debugf "table-search-delete-ok: %s %s" table search)
-  {:db (update-in db [:connections :http :table-search-delete] dec)})
+(rf/reg-event-fx
+ :table-search-delete
+ (fn table-search-delete [{:keys [db]} [_ table search]]
+   (debugf "table-search-delete: %s %s" table search)
+   {:db         (-> db
+                    (update-in [:connections :http :table-search-delete] inc)
+                    (update-in [:tables table :searches] dissoc search))
+    :http-xhrio (merge (api/delete-table-search table search)
+                       {:on-success [:table-search-delete-ok table search]
+                        :on-failure [:table-search-delete-error table search]})}))
+(rf/reg-event-fx
+ :table-search-delete-ok
+ (fn table-search-delete-ok [{:keys [db]} [_ table search]]
+   (debugf "table-search-delete-ok: %s %s" table search)
+   {:db (update-in db [:connections :http :table-search-delete] dec)}))
 
-(defn table-search-delete-error [{:keys [db]} [_ table search error]]
-  (errorf "table-search-delete-error: %s %s %s" table search error)
-  {:dispatch [:http-error :table-search-delete error]
-   :db       (update-in db [:connections :http :table-search-delete] dec)})
-
-(rf/reg-event-fx :table-search-delete table-search-delete)
-(rf/reg-event-fx :table-search-delete-ok table-search-delete-ok)
-(rf/reg-event-fx :table-search-delete-error table-search-delete-error)
+(rf/reg-event-fx
+ :table-search-delete-error
+ (fn table-search-delete-error [{:keys [db]} [_ table search error]]
+   (errorf "table-search-delete-error: %s %s %s" table search error)
+   {:dispatch [:http-error :table-search-delete error]
+    :db       (update-in db [:connections :http :table-search-delete] dec)}))
 
 
 (rf/reg-event-fx
