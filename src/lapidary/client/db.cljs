@@ -34,6 +34,10 @@
 (def search-keys
   #{:query-str :end-str :start-str :reverse? :filters :sort-column})
 
+(def save-search-keys
+  (-> #{:columns :column-options}
+      (concat search-keys)))
+
 (def same-query-keys
   (-> #{:page :page-size}
       (concat search-keys)))
