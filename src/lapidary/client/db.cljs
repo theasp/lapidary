@@ -55,9 +55,6 @@
   (= (select-keys a same-query-keys)
      (select-keys b same-query-keys)))
 
-(def query-params
-  (-> #{:columns :expand-log :show-field :column-options}
-      (concat same-query-keys)))
 (s/def :type/path
   (s/coll-of keyword?))
 
