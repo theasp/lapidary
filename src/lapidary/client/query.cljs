@@ -153,19 +153,6 @@
       (parse-error parsed)
       (insta/transform parse-tx parsed))))
 
-
-(defn select-logs [table where sort-column reverse? offset limit]
-  (let [order       (if reverse? sql/desc sql/asc)
-        sort-column (if (api/path-shallow? sort-column)
-                      (first sort-column)
-                      (api/path-value sort-column))]
-    (sql/select db [:*]
-                (sql/from table)
-                (sql/where where)
-                (sql/order-by (order sort-column))
-                (sql/limit limit)
-                (sql/offset offset))))
-
 (defn cast-json [data]
   `(cast ~(.stringify js/JSON (clj->js data)) :jsonb))
 
