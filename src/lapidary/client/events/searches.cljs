@@ -1,5 +1,6 @@
 (ns lapidary.client.events.searches
   (:require
+   [clojure.spec.alpha :as s]
    [clojure.walk :as walk]
    [ajax.core :as ajax]
    [clojure.string :as str]
@@ -70,14 +71,20 @@
   (update search :column-options build-column-options (:columns search)))
 
 (defn add-search [searches search]
-  (assoc searches (:search_name search)
-         (-> (:options search)
-             (update :columns keywordize-all)
-             (update :columns vec)
-             (update :sort-column #(-> (map keyword %)
-                                       (vec)))
-             (json->column-options)
-             (update :filters json->filters))))
+  (let [name   (:search_name search)
+        search (-> (:options search)
+                   (update :columns keywordize-all)
+                   (update :columns vec)
+                   (update :sort-column #(-> (map keyword %)
+                                             (vec)))
+                   (json->column-options)
+                   (update :filters json->filters)
+                   (db/conform-search))]
+    (if (not= ::s/invalid search)
+      (assoc searches name search)
+      (do
+        (warnf "add-search: %s" (s/explain-str :table/search search))
+        searches))))
 
 (defn result->searches [result]
   (reduce add-search {} (-> (get-in result [:result :rows])
