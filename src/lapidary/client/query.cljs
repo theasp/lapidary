@@ -233,7 +233,7 @@
         window-sql (sql/select db
                                [:*]
                                (sql/from :_logs)
-                               (sql/order-by (order sort-column))
+                               (when sort-column (sql/order-by (order sort-column)))
                                (sql/offset (* page page-size))
                                (sql/limit page-size)
                                (when highest (sql/where `(> :_logs.id ~highest))))

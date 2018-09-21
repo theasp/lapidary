@@ -116,12 +116,14 @@
 (defn query-load [{:keys [db]} [_ table]]
   (when (and (not (get-in db [:query table :loading?]))
              (db/login-ok? db))
-    (let [db (-> db
-                 (update-in [:query table :id] inc)
-                 (assoc-in [:query table :loading?] true))
-          id (get-in db [:query table :id])]
+    (let [db      (-> db
+                      (update-in [:query table :id] inc)
+                      (assoc-in [:query table :loading?] true))
+          options (-> (get-in db [:query table])
+                      (update :sort-column #(when-not (empty? %) %)))
+          id      (:id options)]
       {:db         (update-in db [:connections :http :query-load] inc)
-       :http-xhrio (-> (query/execute-query table (get-in db [:query table]))
+       :http-xhrio (-> (query/execute-query table options)
                        (merge {:on-success [:query-load-ok table id]
                                :on-failure [:query-load-error table id]}))})))
 
