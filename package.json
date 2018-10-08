@@ -4,6 +4,7 @@
     "source-map-support": "^0.5.9"
   },
   "dependencies": {
+    "bunyan": "^1.8.12",
     "clipboard-copy": "^1.4.2",
     "concat-stream": "^1.6.2",
     "content-type": "^1.0.4",

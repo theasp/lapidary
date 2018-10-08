@@ -26,7 +26,8 @@
            :user-filter   "(uid={{username}})"
            :role-mappings {:read  "cn=lapidary,cn=groups,dc=example,dc=com"
                            :admin "cn=lapidary-admin,cn=groups,dc=example,dc=com"}
-           :reconnect     true
+           :reconnect     {:initialDelay (* 1 1000)
+                           :maxDelay     (* 2 60 1000)}
            :tls-verify    true}
    :db    {:pool-size 10
            :hostname  "lapidary"

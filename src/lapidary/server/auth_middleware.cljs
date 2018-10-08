@@ -4,7 +4,6 @@
    [lapidary.server.config :refer [env]]
    [lapidary.server.jwt :as jwt]
    [lapidary.server.response :as response]
-   [lapidary.server.ldap-auth :as ldap-auth]
    [mount.core :refer [defstate]]
    [macchiato.auth.backends.session :as session]
    [macchiato.auth.middleware :as m-auth]
@@ -54,15 +53,15 @@
       (wrap-session-auth)
       (wrap-jwt-auth (:jwt options))))
 
-(defn static-auth [users]
-  (fn [username password result-fn]
-    (debugf "Static auth %s" username)
-    (let [check-user (get users username)]
-      (if (and check-user (= password (:password check-user)))
-        (result-fn (-> check-user
-                       (dissoc :password)
-                       (assoc :usernaame username)))
-        (result-fn false)))))
+(defn static-auth [username password result-fn]
+  (debugf "Static auth %s" username)
+  (let [users      (:users @env)
+        check-user (get users username)]
+    (if (and check-user (= password (:password check-user)))
+      (result-fn (-> check-user
+                     (dissoc :password)
+                     (assoc :usernaame username)))
+      (result-fn false))))
 
 (defn has? [value coll]
   (contains? coll value))
@@ -74,28 +73,6 @@
       :write :write
       :read  :read
       nil)))
-
-(defn ldap-result [{:keys [user-attr group-attr role-mappings]} result]
-  (let [result   (js->clj result :keywordize-keys true)
-        username (get result user-attr)
-        groups   (get result group-attr)]
-    (if-let [role (-> (select-keys role-mappings groups)
-                      (highest-mapping))]
-      {:username username
-       :role     role}
-      :forbidden)))
-
-(defn ldap-auth []
-  (let [options     (:ldap @env)
-        ldap-auth   @ldap-auth/ldap-auth
-        ldap-result #(ldap-result options %)]
-    (fn [username password result-fn]
-      (debugf "LDAP auth %s" username)
-      (.authenticate ldap-auth username password
-                     (fn [err result]
-                       (if err
-                         (result-fn :unauthorized)
-                         (-> result ldap-result result-fn)))))))
 
 (defn wrap-authorization [handler roles]
   (fn [req res raise]

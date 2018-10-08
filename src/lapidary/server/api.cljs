@@ -6,7 +6,7 @@
    [lapidary.server.pg-pool :refer [pg-pool]]
    [lapidary.server.stats :as stats]
    [lapidary.server.jwt :as jwt]
-   [lapidary.server.ldap-auth :refer [ldap-auth]]
+   [lapidary.server.ldap-auth :as ldap-auth]
    [clojure.string :as str]
    [cljs.core.async
     :refer [<! chan put! close! onto-chan to-chan]
@@ -136,10 +136,9 @@
 
 (defn api-login []
   (let [env     @env
-        auth    (:auth env)
         auth-fn (case (get-in env [:auth :method] :users)
-                  :ldap  (auth/ldap-auth)
-                  :users (auth/static-auth (:users env)))
+                  :ldap  ldap-auth/ldap-auth
+                  :users auth/static-auth)
         sign-fn (api-login-sign-identity (:jwt env))]
     (-> (fn [{:keys [body] :as req} res raise]
           (debugf "Login attempt")
