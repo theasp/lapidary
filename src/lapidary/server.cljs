@@ -5,6 +5,7 @@
    [clojure.string :as str]
    [lapidary.server.web-handler]
    [lapidary.server.pg-pool]
+   [lapidary.server.provision]
    [lapidary.server.api :as api]
    [lapidary.server.pg-schema :as pg-schema]
    [lapidary.server.config :refer [env]]
