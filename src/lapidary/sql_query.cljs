@@ -45,13 +45,14 @@
 (defn create-log-table [table-name]
   ;; TODO: Make sure table-name does't suck
   [(sql/sql (sql/create-table db (keyword (str "public." table-name))
+                              (sql/if-not-exists true)
                               (sql/column :id :serial :not-null? true :primary-key? true)
                               (sql/column :tag :text)
                               (sql/column :time :timestamptz)
                               (sql/column :record :jsonb)))
-   [(str "CREATE INDEX " table-name "_tag_idx ON " table-name "(tag)")]
-   [(str "CREATE INDEX " table-name "_time_idx ON " table-name "(time)")]
-   [(str "CREATE INDEX " table-name "_record_idx ON " table-name " USING GIN (record jsonb_path_ops)")]])
+   [(str "CREATE INDEX IF NOT EXISTS " table-name "_tag_idx ON " table-name "(tag)")]
+   [(str "CREATE INDEX IF NOT EXISTS " table-name "_time_idx ON " table-name "(time)")]
+   [(str "CREATE INDEX IF NOT EXISTS " table-name "_record_idx ON " table-name " USING GIN (record jsonb_path_ops)")]])
 
 (defn drop-log-table [table-name]
   (-> (sql/drop-table db (keyword "public" table-name))
