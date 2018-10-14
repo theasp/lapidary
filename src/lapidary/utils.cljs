@@ -148,6 +148,9 @@
    (or (nil? before)
        (< age (- now before)))))
 
+(defn error? [e]
+  (instance? js/Error e))
+
 (defn stop-propogation [f]
   (fn [e]
     (.stopPropagation e)
