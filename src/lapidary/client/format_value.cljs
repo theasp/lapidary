@@ -2,7 +2,6 @@
   (:require
    [lapidary.utils :as utils]
    ["sugar-date" :as sugar-date]
-   [lapidary.client.sugar :as sugar]
    [clojure.string :as str]
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))

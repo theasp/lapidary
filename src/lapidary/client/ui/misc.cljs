@@ -2,7 +2,7 @@
   (:require
    [lapidary.client.router :as router]
    [lapidary.utils :as utils]
-   [lapidary.client.sugar :as sugar]
+   [lapidary.sugar :as sugar]
    [re-frame.core :as rf]
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]

@@ -2,11 +2,11 @@
   (:require
    [ajax.core :as ajax]
    [clojure.walk :as walk]
-   [lapidary.client.query :as query]
+   [lapidary.search-query :as query]
    [lapidary.utils :as utils]
    [lapidary.client.db :as db]
    [lapidary.client.router :as router]
-   [lapidary.client.sugar :as sugar]
+   [lapidary.sugar :as sugar]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]
    [taoensso.timbre :as timbre

@@ -1,10 +1,9 @@
-(ns lapidary.client.query
+(ns lapidary.search-query
   (:require
    [sqlingvo.core :as sql]
    [sqlingvo.util :as sql-util]
-   [lapidary.client.state :as state]
-   [lapidary.client.sugar :as sugar]
-   [lapidary.client.api :as api]
+   [lapidary.sugar :as sugar]
+   [lapidary.sql-query :as api]
    [instaparse.core :as insta :refer-macros [defparser]]
    [lapidary.utils :as utils]
    [taoensso.timbre :as timbre :refer-macros (tracef debugf infof warnf errorf)]))
@@ -210,7 +209,7 @@
 
 (def query-debug-keys [:table :highest :page-size :page :query-str :start-str :end-str :sort-column :reverse? :filters])
 
-(defn execute-query [table query-options]
+(defn search-query [table query-options]
   #_(debugf "QUERY: %s %s" table (select-keys query-options query-debug-keys))
   (let [{:keys [highest page-size page query-str start-str end-str sort-column reverse? filters]}
         query-options
@@ -246,5 +245,4 @@
                   (sql/select db
                               [(sql/as (sql/select db [`(json_agg :_window.*)] (sql/from :_window)) :logs)
                                (sql/as (sql/select db [`(json_agg :_stats.*)] (sql/from :_stats)) :stats)]))
-        (sql/sql)
-        (api/sql-execute))))
+        (sql/sql))))

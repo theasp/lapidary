@@ -1,4 +1,4 @@
-(ns lapidary.client.sugar
+(ns lapidary.sugar
   (:require
    ["sugar-date" :as sugar-date]
    [taoensso.timbre :as timbre

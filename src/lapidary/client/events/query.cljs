@@ -5,7 +5,8 @@
    [lapidary.utils :as utils]
    [lapidary.client.state :as state]
    [lapidary.client.db :as db]
-   [lapidary.client.query :as query]
+   [lapidary.client.api :as api]
+   [lapidary.search-query :as query]
    [lapidary.client.router :as router]
    [lapidary.client.format-value :as format-value]
    [re-frame.core :as rf]
@@ -123,7 +124,7 @@
                       (update :sort-column #(when-not (empty? %) %)))
           id      (:id options)]
       {:db         (update-in db [:connections :http :query-load] inc)
-       :http-xhrio (-> (query/execute-query table options)
+       :http-xhrio (-> (api/search-query table options)
                        (merge {:on-success [:query-load-ok table id]
                                :on-failure [:query-load-error table id]}))})))
 

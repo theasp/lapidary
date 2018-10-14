@@ -7,7 +7,6 @@
    [lapidary.utils :as utils]
    [lapidary.client.state :as state]
    [lapidary.client.db :as db]
-   [lapidary.client.query :as query]
    [lapidary.client.router :as router]
    [re-frame.core :as rf]
    [lapidary.client.api :as api]

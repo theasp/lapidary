@@ -1,7 +1,7 @@
 (ns lapidary.client.ui.sidebar
   (:require
    [lapidary.utils :as utils]
-   [lapidary.client.query :as query]
+   [lapidary.search-query :as query]
    [lapidary.client.ui.misc :as ui-misc]
    [re-frame.core :as rf]
    [clojure.string :as str]

@@ -2,8 +2,8 @@
   (:require
    [lapidary.utils :as utils]
    [lapidary.client.state :as state]
-   [lapidary.client.sugar :as sugar]
-   [lapidary.client.query :as query]
+   [lapidary.sugar :as sugar]
+   [lapidary.search-query :as query]
    [lapidary.client.format-value :as format-value]
    [lapidary.client.ui.misc :as ui-misc]
    [lapidary.client.ui.navbar :as navbar]
