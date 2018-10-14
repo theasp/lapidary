@@ -104,7 +104,7 @@
   ([db sql]
    (result-chan execute! db sql))
   ([db [sql & params] f]
-   #_(debugf "SQL: %s %s" sql (vec params))
+   (tracef "SQL: %s %s" sql (vec params))
    (try
      (.query db sql (-> params vec clj->js)
              (fn [err rs]
@@ -113,3 +113,39 @@
                  (f nil (result rs)))))
      (catch js/Object err
        (f err nil)))))
+
+(def begin-transaction ["BEGIN TRANSACTION"])
+(def rollback-transaction ["ROLLBACK TRANSACTION"])
+(def commit-transaction ["COMMIT TRANSACTION"])
+
+(defn error? [e]
+  (instance? js/Error e))
+
+(defn transaction!
+  "Executes sql statements with parameters and return results."
+  ([db all-sql]
+   (result-chan transaction! db all-sql))
+  ([db [all-sql & params] f]
+   (go
+     (let [start-time (js/Date.now)
+           result     (<! (execute! db begin-transaction))]
+       (if (error? result)
+         (f result nil)
+         (let [results (loop [results []
+                              all-sql all-sql]
+                         (if-let [sql (first all-sql)]
+                           (let [result (<! (execute! db sql))]
+                             (if (error? result)
+                               result
+                               (recur (conj results result)
+                                      (rest all-sql))))
+                           results))]
+           (if (error? results)
+             (do
+               (<! (execute! db rollback-transaction))
+               (f results nil))
+             (let [result (<! (execute! db commit-transaction))]
+               (if (error? result)
+                 (f result nil)
+                 (f nil {:result results
+                         :time   (- (js/Date.now) start-time)}))))))))))
