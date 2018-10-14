@@ -4,7 +4,7 @@ version: '3.1'
 
 services:
   db:
-    image: postgres
+    image: postgres:10.1
     restart: always
     environment:
       POSTGRES_DB: lapidary
@@ -13,7 +13,7 @@ services:
 
   lapidary:
     # replace username/repo:tag with your name and image details
-    image: theasp/lapidary
+    image: theasp/lapidary:latest
     restart: always
     ports:
       - "8081:80"
@@ -45,23 +45,23 @@ services:
       # LDAP__GROUP_ATTR: memberOf
       # LDAP__RECONNECT: true
       # LDAP__TLS_VERIFY: true
+
+      # Provisioning
+      PROVISION__TABLES: systemd,syslog,unmatched
     depends_on:
       - db
 
   fluentd:
-    image: theasp/fluentd-plugins:pgjson
+    image: theasp/fluentd-plugins:common
     restart: always
     ports:
-      - "24225:24224"
-      - "9881:9880"
+      - "24230:24224"
+      - "5145:5140/tcp"
+      - "5145:5140/udp"
     volumes:
-      - "/srv/lapidary-fluentd/etc:/fluentd/etc"
-      - "/srv/lapidary-fluentd/log:/fluentd/log"
-      - "/srv/lapidary-fluentd/pos:/fluentd/pos"
-      # If you want to log from systemd on localhost, you can use these
-      # - /etc/machine-id:/etc/machine-id:ro
-      # - /var/log:/var/log:ro
-      # - /run/log/journal:/run/log/journal:ro
-      # - /run/systemd/journal:/run/systemd/journal:ro
+      - "./docker/fluentd/etc:/fluentd/etc"
+      - "./docker/fluentd/log:/fluentd/log"
+      - "./docker/fluentd/pos:/fluentd/pos"
+      - "./docker/fluentd/pos:/fluentd/buffer"
     depends_on:
       - db
