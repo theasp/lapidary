@@ -2,6 +2,7 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]])
   (:require
+   [lapidary.utils :as utils :refer [error?]]
    [lapidary.server.pg :as pg]
    [lapidary.server.pg-pool :refer [pg-pool]]
    [lapidary.server.stats :as stats]
@@ -24,9 +25,6 @@
 (defn ->debugf [data fmt & [process-fn]]
   (debugf fmt ((or process-fn identity) data))
   data)
-
-(defn error? [e]
-  (instance? js/Error e))
 
 (defn api-query-execute [req client sql]
   (let [start-time (js/Date.now)
