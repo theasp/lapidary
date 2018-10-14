@@ -4,6 +4,8 @@ A search engine for structured data using Postgres, with a similar syntax to Apa
 
 Pull requests welcome, especially documentation!
 
+[![CircleCI](https://circleci.com/gh/theasp/lapidary.svg?style=svg)](https://circleci.com/gh/theasp/lapidary)
+
 ## Features
 
 * Data is stored as JSON in PostgreSQL
