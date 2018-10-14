@@ -5,12 +5,12 @@
    [lapidary.server.auth-middleware :as auth]
    [lapidary.server.config :refer [env]]
    [mount.core :refer [defstate]]
-   ["bunyan" :as bunyan]
+   ;;   ["bunyan" :as bunyan]
    [taoensso.timbre :as timbre
     :refer-macros [tracef debugf infof warnf errorf]]))
 
-(def log (bunyan/createLogger #js {:name "lapidary"}))
-(.level log "trace")
+;;(def log (bunyan/createLogger #js {:name "lapidary"}))
+;;(.level log "trace")
 
 (defn remove-nils [m]
   (let [f (fn [[k v]] (when v [k v]))]
@@ -27,7 +27,7 @@
        :connectTimeout  (get opts :connectTimeout (* 30 1000))
        :idleTimeout     (get opts :idleTimeout (* 30 1000))
        :reconnect       (get opts :reconnect true)
-       :log             log
+       ;;:log             log
        :tlsOptions      {:rejectUnauthorized (get opts :tls-verify true)}}
       ))
 
@@ -36,7 +36,6 @@
     (infof "Starting")
     (try
       (let [opts     (-> config :ldap make-options)
-            _        (debugf "LDAP options: %s" opts)
             ldapauth (new LdapAuth (clj->js opts))]
         (.on ldapauth "error"
              (fn [err]
