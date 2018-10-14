@@ -42,18 +42,6 @@
                                     :body)]
                         (sql/from :_window))))
 
-(defn table-set-options [table-name options]
-  ;; TODO: Make sure table-name does't suck
-  [(sql/sql (sql/create-table db (keyword (str "public." table-name))
-                              (sql/column :id :serial :not-null? true :primary-key? true)
-                              (sql/column :tag :text)
-                              (sql/column :time :timestamptz)
-                              (sql/column :record :jsonb)))
-   [(str "CREATE INDEX " table-name "_tag_idx ON " table-name "(tag)")]
-   [(str "CREATE INDEX " table-name "_time_idx ON " table-name "(time)")]
-   [(str "CREATE INDEX " table-name "_record_idx ON " table-name " USING GIN (record jsonb_path_ops)")]])
-
-
 (defn create-log-table [table-name]
   ;; TODO: Make sure table-name does't suck
   [(sql/sql (sql/create-table db (keyword (str "public." table-name))
