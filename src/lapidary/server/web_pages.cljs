@@ -24,9 +24,9 @@
            :content                      "width=device-width, initial-scale=1.0"
            :mobile-web-app-capable       "yes"
            :apple-mobile-web-app-capable "yes"}]
-   (include-css "//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css")
+   (include-css "//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css")
    (include-css (str (path-for :css nil) "style.css"))
-   (include-css "//use.fontawesome.com/releases/v5.0.8/css/all.css")
+   (include-css "//use.fontawesome.com/releases/v5.3.1/css/all.css")
 
    [:link {:rel "manifest" :href "manifest.json"}]
    [:link {:rel "icon" :type "image/svg" :href "/icon.png"}]
