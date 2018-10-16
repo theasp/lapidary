@@ -65,10 +65,6 @@
      :format          (ajax/transit-request-format)
      :response-format (ajax/transit-response-format)}))
 
-(defn table-set-options [table options]
-  (-> (sql-query/table-set-options table options)
-      (sql-execute)))
-
 (defn create-log-table [table]
   (-> (sql-query/create-log-table table)
       (sql-execute)))
