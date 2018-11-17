@@ -9,7 +9,7 @@
 (defn navbar [options menu]
   (let [menu-visible? (atom false)]
     (fn [options menu]
-      [:nav.navbar.is-fixed-top.is-link.has-shadow
+      [:nav.navbar.is-fixed-top.is-link
        [:div.navbar-brand
         (for [item (:brand options)]
           ^{:key (:key item)} [:div.navbar-item (:item item)])
