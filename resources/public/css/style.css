@@ -92,7 +92,7 @@ svg.is-color {
 }
 
 .hero.is-rounded {
-  border-radius: 3px;
+  border-radius: 6px;
 }
 
 .notification.is-plain a:not(.button) {
