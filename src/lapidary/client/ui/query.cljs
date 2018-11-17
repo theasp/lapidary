@@ -173,20 +173,85 @@
                        :value (if (some? value) value 'Null)}}
                [stream-filter-tag table type field value])))))]))
 
-(defn query-form-submit [table state e]
+(defn submit [table state]
   (let [{:keys [query-str start-str end-str query-parsed]} @state]
-    (when
-        (case (.-keyCode e)
-          13
-          (let [parsed     (query/query-parse query-str)
-                parsed-ok? (not (map? parsed))
-                start-ok?  (-> start-str sugar/parse-time sugar/parse-valid?)
-                end-ok?    (-> end-str sugar/parse-time sugar/parse-valid?)
-                form-ok?   (and start-ok? end-ok?)]
-            (if (and form-ok? parsed-ok?)
-              (rf/dispatch [:query-submit table query-str start-str end-str])))
-          false)
+    (let [parsed     (query/query-parse query-str)
+          parsed-ok? (not (map? parsed))
+          start-ok?  (-> start-str sugar/parse-time sugar/parse-valid?)
+          end-ok?    (-> end-str sugar/parse-time sugar/parse-valid?)
+          form-ok?   (and start-ok? end-ok?)]
+      (if (and form-ok? parsed-ok?)
+        (rf/dispatch [:query-submit table query-str start-str end-str])))))
+
+(defn submit-on-enter [table state e]
+  (let [{:keys [query-str start-str end-str query-parsed]} @state]
+    (when (case (.-keyCode e)
+            13 (submit table state)
+            false)
       (.preventDefault e))))
+
+(def start-time-values
+  ["15 minutes ago"
+   "30 minutes ago"
+   "1 hour ago"
+   "4 hours ago"
+   "1 day ago"
+   "7 days ago"
+   "1 month ago"
+   "3 months ago"
+   "1 year ago"])
+
+(def end-time-values
+  ["now"
+   "30 minutes ago"
+   "1 hour ago"
+   "4 hours ago"
+   "1 day ago"
+   "7 days ago"
+   "1 month ago"
+   "3 months ago"
+   "1 year ago"])
+
+(defn input [placeholder value valid? change-fn submit-fn]
+  [:input {:class       [:input (when-not valid? :is-danger)]
+           :type        :text
+           :placeholder placeholder
+           :value       value
+           :on-change   #(-> % .-target .-value change-fn)
+           :on-key-up   (fn [e]
+                          (when (= 13 (.-keyCode e))
+                            (submit-fn)
+                            (.preventDefault e)))}])
+
+
+(defn input-dropdown [placeholder value valid? active? values change-fn submit-fn dropdown-fn]
+  [:div
+   {:class [:dropdown :is-right (when active? :is-active)]}
+   [:div.dropdown-trigger
+    [:div.field.has-addons
+     [:p.control
+      [input placeholder value valid? change-fn submit-fn]]
+     [:p.control
+      [:button
+       {:on-click #(-> active? not dropdown-fn)
+        :class    [:button :has-icon (when active? :is-primary)]}
+       [:span.icon
+        [:i.fa.fa-angle-down]]]]]]
+   [:div.dropdown-menu
+    [:div.dropdown-content
+     (keep-indexed
+      (fn [index value]
+        ^{:key index}
+        [:a.dropdown-item
+         {:on-click (fn []
+                      (dropdown-fn false)
+                      (change-fn value)
+                      (submit-fn))}
+         value])
+      values)]]])
+
+(defn time-valid? [time]
+  (-> time sugar/parse-time sugar/parse-valid?))
 
 (defn query-form [table]
   #_(debugf "Query form: %s %s" params query)
@@ -195,43 +260,37 @@
                         (utils/debounce 250))]
     #_(debugf "FORM A: %s" @state)
     (fn [table]
-      (let [{:keys [query-str start-str end-str query-parsed]} @state
+      (let [{:keys [query-str start-str end-str query-parsed start-dropdown? end-dropdown?]} @state
 
-            parsed-ok? (not (map? query-parsed))
-            start-ok?  (-> start-str sugar/parse-time sugar/parse-valid?)
-            end-ok?    (-> end-str sugar/parse-time sugar/parse-valid?)
-            form-ok?   (and start-ok? end-ok?)
-            submit     #(query-form-submit table state %)
-
+            query-ok?    (not (map? query-parsed))
+            start-ok?    (time-valid? start-str)
+            end-ok?      (time-valid? end-str)
+            form-ok?     (and query-ok? start-ok? end-ok?)
             result-count @(rf/subscribe [:query-result-count table])]
         (parse-query query-str)
-        [:div.field.is-grouped
+
+        [:div.field.is-horizontal.is-grouped
          [:div.control.is-expanded
           [:label.label "Query" (when (> result-count 0) (str " (" result-count ")"))]
-          [:input {:class       (str "input" (when-not parsed-ok? " is-danger"))
-                   :type        :text
-                   :placeholder "Query..."
-                   :value       query-str
-                   :on-change   #(swap! state assoc :query-str (-> % .-target .-value))
-                   :on-key-up   submit}]]
+          [:div.field.has-addons
+           [:p.control.is-expanded
+            [input "Query..." query-str query-ok?
+             #(swap! state assoc :query-str %)
+             #(submit table state)]]]]
 
          [:div.control
           [:label.label "Start Time"]
-          [:input {:class       (str "input" (when-not start-ok? " is-danger"))
-                   :type        :text
-                   :placeholder "Start Time..."
-                   :value       start-str
-                   :on-change   #(swap! state assoc :start-str (-> % .-target .-value))
-                   :on-key-up   submit}]]
+          [input-dropdown "Start time..." start-str start-ok? start-dropdown? start-time-values
+           #(swap! state assoc :start-str %)
+           #(submit table state)
+           #(swap! state assoc :start-dropdown? %)]]
 
          [:div.control
           [:label.label "End Time"]
-          [:input {:class       (str "input" (when-not end-ok? " is-danger"))
-                   :type        :text
-                   :placeholder "End Time..."
-                   :value       end-str
-                   :on-change   #(swap! state assoc :end-str (-> % .-target .-value))
-                   :on-key-up   submit}]]]))))
+          [input-dropdown "End time..." end-str end-ok? end-dropdown? end-time-values
+           #(swap! state assoc :end-str %)
+           #(submit table state)
+           #(swap! state assoc :end-dropdown? %)]]]))))
 
 (defn fields-toggle-button [table]
   (let [visible? @(rf/subscribe [:query-fields-visible? table])]
