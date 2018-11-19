@@ -64,12 +64,12 @@
                                  :long  time-format-long}})
 
 (def field-type-names
-  {:string    "s"
-   :integer   "i"
-   :number    "#"
-   :timestamp "t"
-   :ltree     "."
-   :unknown   "?"})
+  {:string    [:i.fas.fa-font]
+   :integer   [:i.fas.fa-list-ol]
+   :number    [:i.fas.fa-list-ol]
+   :timestamp [:i.far.fa-clock]
+   :ltree     [:i.fas.fa-ellipsis-h]
+   :unknown   [:i.fas.fa-question]})
 
 (def id-column :id)
 
