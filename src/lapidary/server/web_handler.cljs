@@ -86,6 +86,7 @@
   (when stop-fn
     (stop-fn)))
 
+
 (defstate web-handler
   :start (start-web-handler)
-  :stop (stop-web-handler web-handler))
+  :stop (stop-web-handler @web-handler))
