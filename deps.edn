@@ -13,7 +13,6 @@
          macchiato/core                     {:mvn/version "0.2.14"}
          macchiato/env                      {:mvn/version "0.0.6"}
          mount                              {:mvn/version "0.1.13"}
-         org.clojure/clojurescript          {:mvn/version "1.10.339"}
          org.clojure/core.async             {:mvn/version "0.4.474"}
          re-frame                           {:mvn/version "0.10.6"}
          reagent                            {:mvn/version "0.8.1"}
