@@ -71,7 +71,10 @@
                    #(rf/dispatch [:query-expand-field table name]))]
     [:li.is-clearfix
      [:a
-      {:class    (str "is-clearfix" (if selected? " is-active"))
+      {:class    (concat
+                  [:is-clearfix]
+                  (when selected?
+                    [:is-active :has-text-light]))
        :on-click on-click}
       [:span.icon (get ui-misc/field-type-names type "?")]
       " "
@@ -213,7 +216,7 @@
         used-fields?      (atom true)
         available-fields? (atom true)]
     (fn [table]
-      [:div.column.side-panel.is-narrow.section.notification.is-dark.is-plain
+      [:div.column.side-panel.is-narrow.section.notification.is-light.is-plain
        [:aside.menu.side-panel
         [sidebar-label saved-searches? "Saved Searches"]
         (when @saved-searches?
