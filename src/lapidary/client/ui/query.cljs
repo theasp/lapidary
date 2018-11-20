@@ -224,31 +224,36 @@
                             (.preventDefault e)))}])
 
 
-(defn input-dropdown [placeholder value valid? active? values change-fn submit-fn dropdown-fn]
-  [:div
-   {:class [:dropdown :is-right (when active? :is-active)]}
-   [:div.dropdown-trigger
-    [:div.field.has-addons
-     [:p.control
-      [input placeholder value valid? change-fn submit-fn]]
-     [:p.control
-      [:button
-       {:on-click #(-> active? not dropdown-fn)
-        :class    [:button :has-icon (when active? :is-primary)]}
-       [:span.icon
-        [:i.fa.fa-angle-down]]]]]]
-   [:div.dropdown-menu
-    [:div.dropdown-content
-     (keep-indexed
-      (fn [index value]
-        ^{:key index}
-        [:a.dropdown-item
-         {:on-click (fn []
-                      (dropdown-fn false)
-                      (change-fn value)
-                      (submit-fn))}
-         value])
-      values)]]])
+(defn input-dropdown [expand? placeholder value valid? active? values change-fn submit-fn dropdown-fn]
+  (if (empty? values)
+    [:p
+     {:class [:control :is-fullwidth (when expand? :is-expanded)]}
+     [input placeholder value valid? change-fn submit-fn]]
+    [:div
+     {:class [:dropdown :is-block :is-right (when active? :is-active)]}
+     [:div.dropdown-trigger
+      [:div.field.has-addons
+       [:p
+        {:class [:control :is-fullwidth (when expand? :is-expanded)]}
+        [input placeholder value valid? change-fn submit-fn]]
+       [:p.control.is-fullwidth
+        [:button
+         {:on-click #(-> active? not dropdown-fn)
+          :class    [:button :has-icon (when active? :is-primary)]}
+         [:span.icon
+          [:i.fa.fa-angle-down]]]]]]
+     [:div.dropdown-menu
+      [:div.dropdown-content
+       (keep-indexed
+        (fn [index value]
+          ^{:key index}
+          [:a.dropdown-item
+           {:on-click (fn []
+                        (dropdown-fn false)
+                        (change-fn value)
+                        (submit-fn))}
+           value])
+        values)]]]))
 
 (defn time-valid? [time]
   (-> time sugar/parse-time sugar/parse-valid?))
@@ -260,37 +265,48 @@
                         (utils/debounce 250))]
     #_(debugf "FORM A: %s" @state)
     (fn [table]
-      (let [{:keys [query-str start-str end-str query-parsed start-dropdown? end-dropdown?]} @state
+      (let [{:keys [query-str start-str end-str query-parsed dropdown]} @state
 
-            query-ok?    (not (map? query-parsed))
-            start-ok?    (time-valid? start-str)
-            end-ok?      (time-valid? end-str)
-            form-ok?     (and query-ok? start-ok? end-ok?)
-            result-count @(rf/subscribe [:query-result-count table])]
+            query-ok?       (not (map? query-parsed))
+            start-ok?       (time-valid? start-str)
+            end-ok?         (time-valid? end-str)
+            form-ok?        (and query-ok? start-ok? end-ok?)
+            result-count    @(rf/subscribe [:query-result-count table])
+            query-dropdown? (= :query dropdown)
+            start-dropdown? (= :start dropdown)
+            end-dropdown?   (= :end dropdown)
+            history         @(rf/subscribe [:query-history table])
+            query-history   (->> history
+                                 (map :query-str)
+                                 (remove nil?)
+                                 (remove str/blank?)
+                                 (map str)
+                                 (remove #(= % query-str))
+                                 (dedupe))]
         (parse-query query-str)
+        #_(debugf "History: %s" (count query-history))
 
         [:div.field.is-horizontal.is-grouped
          [:div.control.is-expanded
           [:label.label "Query" (when (> result-count 0) (str " (" result-count ")"))]
-          [:div.field.has-addons
-           [:p.control.is-expanded
-            [input "Query..." query-str query-ok?
-             #(swap! state assoc :query-str %)
-             #(submit table state)]]]]
+          [input-dropdown true "Query..." query-str query-ok? query-dropdown? query-history
+           #(swap! state assoc :query-str %)
+           #(submit table state)
+           #(swap! state assoc :dropdown (when % :query))]]
 
          [:div.control
           [:label.label "Start Time"]
-          [input-dropdown "Start time..." start-str start-ok? start-dropdown? start-time-values
+          [input-dropdown false "Start time..." start-str start-ok? start-dropdown? start-time-values
            #(swap! state assoc :start-str %)
            #(submit table state)
-           #(swap! state assoc :start-dropdown? %)]]
+           #(swap! state assoc :dropdown (when % :start))]]
 
          [:div.control
           [:label.label "End Time"]
-          [input-dropdown "End time..." end-str end-ok? end-dropdown? end-time-values
+          [input-dropdown false "End time..." end-str end-ok? end-dropdown? end-time-values
            #(swap! state assoc :end-str %)
            #(submit table state)
-           #(swap! state assoc :end-dropdown? %)]]]))))
+           #(swap! state assoc :dropdown (when % :end))]]]))))
 
 (defn fields-toggle-button [table]
   (let [visible? @(rf/subscribe [:query-fields-visible? table])]

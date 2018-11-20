@@ -117,13 +117,19 @@
 (defn query-load [{:keys [db]} [_ table]]
   (when (and (not (get-in db [:query table :loading?]))
              (db/login-ok? db))
-    (let [db      (-> db
-                      (update-in [:query table :id] inc)
-                      (assoc-in [:query table :loading?] true))
+    (let [db      (update-in db [:query table :id] inc)
           options (-> (get-in db [:query table])
                       (update :sort-column #(when-not (empty? %) %)))
           id      (:id options)]
-      {:db         (update-in db [:connections :http :query-load] inc)
+      (debugf "History: %s" (get-in db [:query table :history]))
+
+      {:db         (-> db
+                       (update-in [:connections :http :query-load] inc)
+                       (assoc-in [:query table :loading?] true)
+                       (update-in [:query table :history]
+                                  #(-> %
+                                       (conj (select-keys options [:query-str :start-str :end-str]))
+                                       (dedupe))))
        :http-xhrio (-> (api/search-query table options)
                        (merge {:on-success [:query-load-ok table id]
                                :on-failure [:query-load-error table id]}))})))
@@ -194,7 +200,7 @@
                                       :start-str start-str
                                       :end-str   end-str
                                       :page      0})))
-  db)
+  (update-in db [:query table :history] conj ))
 
 (defn query-expand-field [db [_ table field]]
   (assoc-in db [:query table :expand-field] field))

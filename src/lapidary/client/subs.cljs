@@ -209,3 +209,8 @@
  :active-connections
  (fn [db [_ protocol]]
    (db/active-connections db protocol)))
+
+(rf/reg-sub
+ :query-history
+ (fn [db [_ table]]
+   (get-in db [:query table :history])))
