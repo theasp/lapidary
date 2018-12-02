@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "shadow-cljs": "^2.6.9",
+    "shadow-cljs": "^2.7.6",
     "source-map-support": "^0.5.9"
   },
   "dependencies": {
@@ -8,22 +8,22 @@
     "clipboard-copy": "^1.4.2",
     "concat-stream": "^1.6.2",
     "content-type": "^1.0.4",
-    "cookies": "^0.7.2",
+    "cookies": "^0.7.3",
     "create-react-class": "^15.6.3",
     "death": "^1.1.0",
     "dialog-polyfill": "^0.4.10",
     "etag": "^1.8.1",
-    "jsonwebtoken": "^8.3.0",
-    "ldapauth-fork": "^4.0.2",
+    "jsonwebtoken": "^8.4.0",
+    "ldapauth-fork": "github:theasp/node-ldapauth-fork",
     "lru": "^3.1.0",
     "multiparty": "^4.2.1",
-    "pg": "^7.4.3",
+    "pg": "^7.7.1",
     "pg-native": "^2.2.0",
-    "postgrator": "^3.6.0",
-    "qs": "^6.5.2",
+    "postgrator": "^3.7.0",
+    "qs": "^6.6.0",
     "random-bytes": "^1.0.0",
-    "react": "^16.5.2",
-    "react-dom": "^16.5.2",
+    "react": "^16.6.3",
+    "react-dom": "^16.6.3",
     "simple-encryptor": "^1.4.0",
     "sugar-date": "^2.0.4",
     "xregexp": "^4.2.0"
