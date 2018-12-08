@@ -34,20 +34,20 @@
       {:title    "Move Column Left"
        :disabled is-first?
        :on-click left-fn}
-      [:span.icon [:i.fas.fa-arrow-left]]]
+      [:span.icon (:column-left-sm ui-misc/icons)]]
      [:button.button.is-small
       {:title    "Move Column Right"
        :disabled is-last?
        :on-click right-fn}
-      [:span.icon [:i.fas.fa-arrow-right]]]
+      [:span.icon (:column-right-sm ui-misc/icons)]]
      [:button.button.is-small
       {:title    "Remove Column"
        :on-click remove-fn}
-      [:span.icon [:i.fas.fa-minus]]]
+      [:span.icon (:column-remove-sm ui-misc/icons)]]
      [:button.button.is-small
       {:title    "Show Values"
        :on-click info-fn}
-      [:span.icon [:i.fas.fa-info]]]]))
+      [:span.icon (:info-sm ui-misc/icons)]]]))
 
 (defn stream-field-available-controls [table name type freq]
   (let [add-column #(rf/dispatch [:query-column-add table name])
@@ -58,12 +58,12 @@
      [:button.button.is-small
       {:title    "Add Column"
        :on-click add-column}
-      [:span.icon [:i.fas.fa-plus]]]
+      [:span.icon (:column-add-sm ui-misc/icons)]]
      [:button.button.is-small
       {:title    "Show Values"
        :disabled (nil? field-info)
        :on-click field-info}
-      [:span.icon [:i.fas.fa-info]]]]))
+      [:span.icon (:info-sm ui-misc/icons)]]]))
 
 (defn stream-field [table type name selected? used? freq]
   (let [formats  (get ui-misc/type-formats type)
@@ -76,7 +76,7 @@
                   (when selected?
                     [:is-active :has-text-light]))
        :on-click on-click}
-      [:span.icon (get ui-misc/field-type-names type "?")]
+      [:span.icon (get ui-misc/field-type-names-sm type "?")]
       " "
       (ui-misc/format-path name)
       (when selected?
@@ -107,7 +107,7 @@
 (defn saved-query [table name]
   [:li
    [:a {:on-click #(rf/dispatch [:table-query-search table name])}
-    [:span.icon [:i.fas.fa-bookmark]]
+    [:span.icon (:query-saved-sm ui-misc/icons)]
     name]])
 
 (defn saved-add-submit [table state]
@@ -144,13 +144,14 @@
      [:div.control
       [:button.button.is-primary {:disabled (not name-ok?)
                                   :on-click #(add-fn %)}
-       [:span.icon [:i.fas.fa-plus]]]]]))
+       [:span.icon (:query-add-sm ui-misc/icons)]]]]))
 
 (defn saved-add-button [table state]
-  [:a {:title    "Add Saved Search"
-       :on-click #(swap! state assoc :stage :ask-name)}
-   [:span.icon [:i.fas.fa-plus]]
-   [:span "Add..."]])
+  [:li
+   [:a {:title    "Add Saved Search"
+        :on-click #(swap! state assoc :stage :ask-name)}
+    [:span.icon (:query-add-sm ui-misc/icons)]
+    [:span "Add..."]]])
 
 (defn saved-add [table saved]
   (let [state (atom nil)]
@@ -204,12 +205,12 @@
 (defn sidebar-label [show? label]
   [:p.menu-label
    [:a.is-unselectable {:on-click #(swap! show? not)}
-    [:span.icon.is-small]
+    [:span.icon]
     [:span label]
-    [:span.icon.is-small
+    [:span.icon
      (if @show?
-       [:i.fas.fa-caret-down]
-       [:i.fas.fa-caret-right])]]])
+       (:expanded-sm ui-misc/icons)
+       (:collapsed-sm ui-misc/icons))]]])
 
 (defn stream-fields [table]
   (let [saved-searches?   (atom true)

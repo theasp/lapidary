@@ -24,12 +24,12 @@
       [:a.button.is-small.is-success
        {:title    "Require Value"
         :on-click #(rf/dispatch [:query-filter-add table :require field value])}
-       [:span.icon [:i.fas.fa-check]]]]
+       [:span.icon (:value-require-sm ui-misc/icons)]]]
      [:p.control
       [:a.button.is-small.is-danger
        {:title    "Exclude Value"
         :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
-       [:span.icon [:i.fas.fa-times]]]]]]
+       [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]
    [:td.is-narrow {:style {:vertical-align :middle}}
     [ui-misc/popularity percentage]]
    [:td.is-narrow (goog.string/format "%0.1f%" (* 100 percentage))]
@@ -63,14 +63,14 @@
         :on-click #(rf/dispatch [:table-set-default-search table name])})
      [:span.icon
       (if default?
-        [:i.fas.fa-star]
-        [:i.far.fa-star])]]]
+        (:star-sm ui-misc/icons)
+        " ")]]]
    [:td name]
    [:td
     [:button.button.is-small.is-danger
      {:on-click #(rf/dispatch [:query-confirm-search-delete table name])}
      [:span.icon
-      [:i.fas.fa-trash]]]]])
+      (:trash-sm ui-misc/icons)]]]])
 
 
 (defn searches-table [table]
@@ -115,14 +115,11 @@
        [:button.button
         {:disabled (= pos 0)
          :on-click #(rf/dispatch [:query-column-left table column])}
-        [:span.icon
-         [:i.fas.fa-arrow-up]]]
-
+        [:span.icon (:arrow-up-sm ui-misc/icons)]]
        [:button.button
         {:disabled (= pos (- column-count 1))
          :on-click #(rf/dispatch [:query-column-right table column])}
-        [:span.icon
-         [:i.fas.fa-arrow-down]]]]]
+        [:span.icon (:arrow-down-sm ui-misc/icons)]]]]
      [:td (ui-misc/format-path column)]
      [:td
       [:div.field
@@ -148,7 +145,7 @@
         [:button.button
          {:on-click #(rf/dispatch [:query-column-width-dec table column])
           :disabled (<= width 1)}
-         [:i.fas.fa-minus]]]
+         [:span.icon.is-small (:spinner-plus-sm ui-misc/icons)]]]
        [:div.control
         [:input.input
          {:value     width
@@ -157,8 +154,7 @@
        [:div.control
         [:button.button
          {:on-click #(rf/dispatch [:query-column-width-inc table column])}
-         [:span.icon
-          [:i.fas.fa-plus]]]]]]]))
+         [:span.icon.is-small (:spinner-minus-sm ui-misc/icons)]]]]]]))
 
 (defn query-columns-table [table]
   (let [columns      @(rf/subscribe [:query-columns table])
@@ -185,20 +181,17 @@
     [:li
      {:class (when (= :query @active-tab) "is-active")}
      [:a {:on-click #(reset! active-tab :query)}
-      [:span.icon.is-small
-       [:i.fas.fa-search]]
+      [:span.icon.is-small (:search ui-misc/icons)]
       [:span "Query"]]]
     [:li
      {:class (when (= :searches @active-tab) "is-active")}
      [:a {:on-click #(reset! active-tab :searches)}
-      [:span.icon.is-small
-       [:i.fas.fa-bookmark]]
+      [:span.icon.is-small (:query-saved ui-misc/icons)]
       [:span "Searches"]]]
     [:li
      {:class (when (= :maintenance @active-tab) "is-active")}
      [:a {:on-click #(reset! active-tab :maintenance)}
-      [:span.icon.is-small
-       [:i.fas.fa-cog]]
+      [:span.icon.is-small (:settings ui-misc/icons)]
       [:span "Maintenance"]]]]])
 
 (defn dialog-body [_]

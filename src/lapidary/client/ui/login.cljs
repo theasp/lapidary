@@ -4,6 +4,7 @@
    [lapidary.client.ui.navbar :as navbar]
    [lapidary.client.state :as state]
    [lapidary.client.db :as db]
+   [lapidary.client.ui.misc :as ui-misc]
    [clojure.string :as str]
    [reagent.core :as reagent :refer [atom]]
    [re-frame.core :as rf]
@@ -35,8 +36,7 @@
                                 :auto-focus    true
                                 :value         @username
                                 :on-change     #(reset! username (-> % .-target .-value))}]
-                 [:span.icon.is-small.is-left
-                  [:i.fas.fa-user]]]]
+                 [:span.icon.is-small.is-left (:login-user-sm ui-misc/icons)]]]
                [:div.field
                 #_[:label.label "Password"]
                 [:div.control.has-icons-left
@@ -45,8 +45,7 @@
                                 :auto-complete :current-password
                                 :value         @password
                                 :on-change     #(reset! password (-> % .-target .-value))}]
-                 [:span.icon.is-small.is-left
-                  [:i.fas.fa-lock]]]]
+                 [:span.icon.is-small.is-left (:login-password-sm ui-misc/icons)]]]
 
                [:div.field
                 [:div.control

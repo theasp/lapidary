@@ -40,18 +40,15 @@
           [:a.button.is-link.is-small
            {:title    "Copy Value"
             :on-click #(copy (str value))}
-           [:span.icon
-            [:i.fas.fa-copy]]]
+           [:span.icon (:value-copy ui-misc/icons)]]
           [:a.button.is-success.is-small
            {:title    "Require Value"
             :on-click #(rf/dispatch [:query-filter-add table :require field value])}
-           [:span.icon
-            [:i.fas.fa-check]]]
+           [:span.icon (:value-require ui-misc/icons)]]
           [:a.button.is-danger.is-small
            {:title    "Exclude Value"
             :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
-           [:span.icon
-            [:i.fas.fa-times]]]]])]]))
+           [:span.icon (:value-exclude ui-misc/icons)]]]])]]))
 
 (defn stream-detail [table log columns]
   (let [selected-field (atom nil)
@@ -83,8 +80,8 @@
           :on-click check-fn}
          [:span.icon
           (if @checked?
-            [:i.fas.fa-check]
-            " ")]]]
+            (:checkbox-checked ui-misc/icons)
+            (:checkbox-unchecked ui-misc/icons))]]]
        (for [column columns]
          (let [value   (get-in log column)
                options (get column-options column)
@@ -106,8 +103,8 @@
      (when sort?
        [:span.icon
         (if reverse?
-          [:i.fas.fa-chevron-down]
-          [:i.fas.fa-chevron-up])])]))
+          (:order-ascend ui-misc/icons)
+          (:order-descend ui-misc/icons))])]))
 
 (defn stream-table-header [table columns]
   (let [sort-column    @(rf/subscribe [:query-sort-column table])
@@ -240,8 +237,7 @@
         [:button
          {:on-click #(-> active? not dropdown-fn)
           :class    [:button :has-icon (when active? :is-primary)]}
-         [:span.icon
-          [:i.fa.fa-angle-down]]]]]]
+         [:span.icon (:dropdown ui-misc/icons)]]]]]
      [:div.dropdown-menu
       [:div.dropdown-content
        (keep-indexed
@@ -313,7 +309,10 @@
     [:a {:title    (str (if visible? "Hide" "Show") " Fields")
          :on-click #(rf/dispatch [:query-fields-visible table (not visible?)])
          :class    (str "button has-tooltip" (if visible? " is-primary")) }
-     [:span.icon [:i.fas.fa-list]]]))
+     [:span.icon
+      (if visible?
+        (:fields-hidden ui-misc/icons)
+        (:fields-visible ui-misc/icons))]]))
 
 (defn view-query [view]
   (let [table                 (get-in view [:params :table])
@@ -335,12 +334,12 @@
          [:p.control
           [:a.button.is-white
            {:on-click #(rf/dispatch [:query-settings-visible table true])}
-           [:span.icon [:i.fas.fa-cog]]
+           [:span.icon (:settings ui-misc/icons)]
            [:span "Settings"]]]
          [:p.control
           [:a.button.is-white
            {:on-click #(rf/dispatch [:tables-navigate])}
-           [:span.icon [:i.fas.fa-table]]
+           [:span.icon (:tables ui-misc/icons)]
            [:span "Tables"]]]]]]]
      [:div.columns.is-mobile.is-flex.is-fullsize
       (cond

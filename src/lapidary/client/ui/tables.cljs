@@ -2,6 +2,7 @@
   (:require
    [lapidary.utils :as utils]
    [lapidary.client.ui.navbar :as navbar]
+   [lapidary.client.ui.misc :as ui-misc]
    [lapidary.client.state :as state]
    [lapidary.client.api :as api]
    [lapidary.client.db :as db]
@@ -27,8 +28,7 @@
        [:div.field
         [:div.control.has-text-centered
          [:button.button.is-primary.is-large {:on-click #(rf/dispatch [:table-query-search table-name])}
-          [:span.icon
-           [:i.fas.fa-search]]
+          [:span.icon.is-medium (:search-lg ui-misc/icons)]
           [:span (:table_name table)]]]]
        [:div.field
         [:div.control.has-text-centered
@@ -39,7 +39,7 @@
         (for [[name query] (sort-by :search_name searches)]
           ^{:key name}
           [:button.button {:on-click #(rf/dispatch [:table-query-search table-name name])}
-           [:span.icon [:i.fas.fa-bookmark]]
+           [:span.icon (:query-saved ui-misc/icons)]
            [:span name]])]]]]))
 
 (defn new-table-card [state]
@@ -70,8 +70,7 @@
        [:div.control.has-text-right
         [:button.button.is-primary
          {:disabled (not name-ok?)}
-         [:span.icon
-          [:span.fas.fa-plus]]
+         [:span.icon (:table-create-lg ui-misc/icons)]
          [:span "Create"]]]]]]))
 
 (defn hidden-new-table [state]
@@ -80,8 +79,7 @@
     [:div.field
      [:div.control.has-text-centered
       [:button.button.is-primary.is-large {:on-click #(swap! state assoc :card-mode :form)}
-       [:span.icon
-        [:i.fas.fa-plus]]
+       [:span.icon (:table-create-lg ui-misc/icons)]
        [:span "New"]]]]
     [:div.field.has-text-centered
      [:div.control.has-text-centered

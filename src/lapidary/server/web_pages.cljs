@@ -7,6 +7,29 @@
   (:require-macros
    [hiccups.core :as hiccups :refer [html]]))
 
+(def bulma-ver "0.7.2")
+(def fa-ver "5.3.1")
+(def mdi-ver "3.0.39")
+
+(def bulma-url
+  (str "//cdnjs.cloudflare.com/ajax/libs/bulma/"
+       bulma-ver
+       "/css/bulma.min.css"))
+
+(def fa-url
+  (str "//use.fontawesome.com/releases/v"
+       fa-ver
+       "/css/all.css"))
+
+(def material-icons-url
+  "//fonts.googleapis.com/icon?family=Material+Icons")
+
+(def mdi-url
+  (str
+   "https://cdn.materialdesignicons.com/"
+   mdi-ver
+   "/css/materialdesignicons.min.css"))
+
 (defn ->html5 [v]
   (str "<!DOCTYPE html>" (hiccups/html v)))
 
@@ -24,10 +47,10 @@
            :content                      "width=device-width, initial-scale=1.0"
            :mobile-web-app-capable       "yes"
            :apple-mobile-web-app-capable "yes"}]
-   (include-css "//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css")
+   (include-css bulma-url)
    (include-css (str (path-for :css nil) "style.css"))
-   (include-css "//use.fontawesome.com/releases/v5.3.1/css/all.css")
-
+   #_(include-css fa-url)
+   (include-css mdi-url)
    [:link {:rel "manifest" :href "manifest.json"}]
    [:link {:rel "icon" :type "image/svg" :href "/icon.png"}]
    [:link {:rel "icon" :type "image/png" :href "/icon-32.png"}]])

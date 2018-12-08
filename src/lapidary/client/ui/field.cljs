@@ -23,12 +23,12 @@
       [:a.button.is-small.is-success
        {:title    "Require Value"
         :on-click #(rf/dispatch [:query-filter-add table :require field value])}
-       [:span.icon [:i.fas.fa-check]]]]
+       [:span.icon (:value-require-sm ui-misc/icons)]]]
      [:p.control
       [:a.button.is-small.is-danger
        {:title    "Exclude Value"
         :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
-       [:span.icon [:i.fas.fa-times]]]]]]
+       [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]
    [:td.is-narrow {:style {:vertical-align :middle}}
     [ui-misc/popularity percentage]]
    [:td.is-narrow (goog.string/format "%0.1f%" (* 100 percentage))]
@@ -47,7 +47,9 @@
              :style    {:margin-right "10px"}
              :on-click #(rf/dispatch [:field-all-values table field (not all-values?)])}
     [:span.icon
-     [:i.fas.fa-filter]]]
+     (if all-values?
+       (:filter-disabled ui-misc/icons)
+       (:filter-enabled ui-misc/icons))]]
    [:p.modal-card-title (ui-misc/format-path field)]
    [:button.delete {:on-click #(rf/dispatch [:query-show-field-close table])}]])
 
