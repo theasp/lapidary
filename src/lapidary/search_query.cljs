@@ -40,10 +40,9 @@
 
   null = <'null' | 'nil' | 'undefined'>
 
-  string = <'\"'> ( ESCAPED-CHAR | NORMAL-CHAR )+ <'\"'>
+  string = <'\"'> STRING <'\"'>
+  <STRING> = #'([^\"]|\\\\.)*'
 
-  <NORMAL-CHAR> = #'[^\"]'
-  <ESCAPED-CHAR> = #'\\\\.'
 
   word = #'[^\":() ]+'
   <WORD> = #'[^\":() ]+'
@@ -111,8 +110,7 @@
       (warnf "Unknown operation: %s" (get options :comparison)))))
 
 (def parse-tx
-  {:string         str
-   :meta-keyword   (fn [k] [(keyword k)])
+  {:meta-keyword   (fn [k] [(keyword k)])
    :record-keyword (fn [k] [:record (keyword k)])
    :word           identity
    :term           parse-term
