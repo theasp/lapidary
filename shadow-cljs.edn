@@ -8,6 +8,12 @@
                    :devtools         {:devtools-url "https://cljs-dev.industrial.gt0.ca/shadow-cljs"
                                       :before-load  lapidary.server/stop!
                                       :after-load   lapidary.server/start!}}
+
+          :server-test {:target    :node-test
+                        :output-to "target/private/js/server-test.js"
+                        :modules   {:server-test {:entries [lapidary.server-test]}}
+                        :autorun   true}
+
           :client {:target     :browser
                    :output-dir "resources/public/js"
                    :asset-path "/js"
@@ -17,5 +23,5 @@
                                 :watch-dir    "resources/public"
                                 :before-load  lapidary.client/stop!
                                 :after-load   lapidary.client/restart!}}}
- :http   {:port 9650
-          :host "0.0.0.0"}}
+ :http {:port 9650
+        :host "0.0.0.0"}}

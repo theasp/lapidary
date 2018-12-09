@@ -1,4 +1,4 @@
-{:paths ["src"]
+{:paths ["src" "test"]
  :deps  {ca.gt0.theasp/macchiato-core-async {:mvn/version "0.2.2"}
          cljs-ajax                          {:mvn/version "0.8.0"}
          cljsjs/react                       {:mvn/version "16.6.0-0"}
