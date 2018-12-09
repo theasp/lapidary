@@ -162,9 +162,16 @@
 
 (def battery-colors
   ["has-text-danger"
+   "has-text-danger"
+   "has-text-danger"
    "has-text-warning"
    "has-text-warning"
    "has-text-warning"
+   "has-text-dark"
+   "has-text-dark"
+   "has-text-dark"
+   "has-text-success"
+   "has-text-success"
    "has-text-success"])
 
 (def battery-count (count battery-boxes))
@@ -173,7 +180,7 @@
   (let [c (-> (- battery-count 1)
               (* p)
               (int))]
-    [:span {:class (str "icon " #_(get battery-colors c))
+    [:span {:class (str "icon " (get battery-colors c))
             :title (goog.string.format "%0.2f%" (* 100 p))}
      (get battery-boxes c)]))
 
