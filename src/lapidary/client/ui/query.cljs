@@ -40,15 +40,15 @@
           [:a.button.is-link.is-small
            {:title    "Copy Value"
             :on-click #(copy (str value))}
-           [:span.icon (:value-copy ui-misc/icons)]]
+           [:span.icon (:value-copy-sm ui-misc/icons)]]
           [:a.button.is-success.is-small
            {:title    "Require Value"
             :on-click #(rf/dispatch [:query-filter-add table :require field value])}
-           [:span.icon (:value-require ui-misc/icons)]]
+           [:span.icon (:value-require-sm ui-misc/icons)]]
           [:a.button.is-danger.is-small
            {:title    "Exclude Value"
             :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
-           [:span.icon (:value-exclude ui-misc/icons)]]]])]]))
+           [:span.icon (:value-exclude-sm ui-misc/icons)]]]])]]))
 
 (defn stream-detail [table log columns]
   (let [selected-field (atom nil)

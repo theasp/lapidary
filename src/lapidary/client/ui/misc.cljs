@@ -83,6 +83,7 @@
    :checkbox-checked   [:i.mdi.mdi-24px.mdi-check]
    :checkbox-unchecked " "
    :value-copy         [:i.mdi.mdi-24px.mdi-content-copy]
+   :value-copy-sm      [:i.mdi.mdi-18px.mdi-content-copy]
    :value-require      [:i.mdi.mdi-24px.mdi-check]
    :value-exclude      [:i.mdi.mdi-24px.mdi-close]
    :value-require-sm   [:i.mdi.mdi-18px.mdi-check]
