@@ -21,7 +21,7 @@
     (fn []
       (let [{:keys [loading? error]} @login]
         [:div
-         [navbar/navbar {:brand [{:key :title :item "Lapidary"}]} nil]
+         [navbar/navbar {:brand [{:key :title :item [:span.title.has-text-white "Lapidary"]}]} nil]
          [:section.section
           [:div.columns.is-centered
            [:div.column.is-narrow

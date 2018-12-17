@@ -325,7 +325,7 @@
         pages                 @(rf/subscribe [:query-pages table])]
     [:div
      [navbar/navbar {:brand [{:key :fields :item [fields-toggle-button table]}
-                             {:key :title :item table}]}
+                             {:key :title :item [:span.title.has-text-white table]}]}
       [:div.navbar-end
        [:div.navbar-item
         [:div.field.is-grouped

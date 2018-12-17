@@ -95,7 +95,7 @@
 
 (defn list-tables [view]
   [:div
-   [navbar/navbar {:brand [{:key :title :item "Tables"}]}
+   [navbar/navbar {:brand [{:key :title :item [:span.title.has-text-white "Tables"]}]}
     [:div.navbar-end
      [:div.navbar-item
       [:div.field.is-grouped
