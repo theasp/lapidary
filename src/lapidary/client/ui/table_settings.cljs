@@ -143,7 +143,7 @@
       [:div.field.has-addons
        [:div.control
         [:button.button
-         {:on-click #(rf/dispatch [:query-column-width-dec table column])
+         {:on-click #(rf/dispatch [:query-column-width-inc table column])
           :disabled (<= width 1)}
          [:span.icon.is-small (:spinner-plus-sm ui-misc/icons)]]]
        [:div.control
@@ -153,7 +153,7 @@
           :size      4}]]
        [:div.control
         [:button.button
-         {:on-click #(rf/dispatch [:query-column-width-inc table column])}
+         {:on-click #(rf/dispatch [:query-column-width-dec table column])}
          [:span.icon.is-small (:spinner-minus-sm ui-misc/icons)]]]]]]))
 
 (defn query-columns-table [table]
