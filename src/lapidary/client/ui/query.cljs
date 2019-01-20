@@ -57,7 +57,7 @@
       (let [columns        (set columns)
             selected-field @selected-field]
         [:tr
-         [:td {:col-span (-> columns count inc)}
+         [:td.is-size-7-mobile {:col-span (-> columns count inc)}
           [:div.field.is-grouped.is-grouped-multiline
            (for [field (->> (utils/kvpaths-all log)
                             (sort)
@@ -74,14 +74,14 @@
     (fn [table log columns selected? column-options]
       [:tr {:on-click #(rf/dispatch [:query-expand-log table (if selected? nil (get log ui-misc/id-column))])
             :class    (when selected? "is-selected is-link is-unselectable")}
-       [:td
-        [:button
-         {:class    (str "button is-small" (when @checked? " is-primary"))
-          :on-click check-fn}
-         [:span.icon
-          (if @checked?
-            (:checkbox-checked ui-misc/icons)
-            (:checkbox-unchecked ui-misc/icons))]]]
+       #_[:td
+          [:button
+           {:class    (str "button is-small" (when @checked? " is-primary"))
+            :on-click check-fn}
+           [:span.icon
+            (if @checked?
+              (:checkbox-checked ui-misc/icons)
+              (:checkbox-unchecked ui-misc/icons))]]]
        (for [column columns]
          (let [value   (get-in log column)
                options (get column-options column)
@@ -89,13 +89,14 @@
                            (utils/update-type value))
                fmt     (get options :format "")]
            ^{:key column}
-           [:td {:title (str value)}
+           [:td.is-size-7-mobile {:title (str value)}
             #_(js/console.log value)
             (format-value/format value type fmt)]))])))
 
 (defn stream-table-header-column [table column options sort? reverse? last?]
   (let [width (-> options (get :width 12) (str "em"))]
-    [:th {:on-click #(rf/dispatch (if sort?
+    [:th {:class    :is-size-7-mobile
+          :on-click #(rf/dispatch (if sort?
                                     [:query-sort-reverse table (not reverse?)]
                                     [:query-sort-column table column]))
           :style    (when-not last? {:width width})}
@@ -113,9 +114,9 @@
         column-count   (count columns)]
     [:thead
      [:tr
-      [:th {:style {:min-width "44px"
-                    :width     "44px"
-                    :max-width "44px"}}]
+      #_[:th {:style {:min-width "44px"
+                      :width     "44px"
+                      :max-width "44px"}}]
       (for [column columns]
         (let [sort?   (= sort-column column)
               last?   (= column (last columns))
