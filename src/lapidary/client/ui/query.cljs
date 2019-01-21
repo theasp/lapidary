@@ -57,7 +57,7 @@
       (let [columns        (set columns)
             selected-field @selected-field]
         [:tr
-         [:td.is-size-7-mobile {:col-span (-> columns count inc)}
+         [:td.is-size-7-mobile {:col-span (-> columns count)}
           [:div.field.is-grouped.is-grouped-multiline
            (for [field (->> (utils/kvpaths-all log)
                             (sort)
