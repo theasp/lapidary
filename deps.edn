@@ -8,7 +8,7 @@
          day8.re-frame/http-fx              {:mvn/version "0.1.6"}
          funcool/bide                       {:mvn/version "1.6.0"}
          hiccups                            {:mvn/version "0.3.0"}
-         instaparse                         {:mvn/version "1.4.9"}
+         instaparse                         {:mvn/version "1.4.10"}
          macchiato/auth                     {:mvn/version "0.0.10"}
          macchiato/core                     {:mvn/version "0.2.14"}
          macchiato/env                      {:mvn/version "0.0.6"}
@@ -16,7 +16,7 @@
          org.clojure/core.async             {:mvn/version "0.4.490"}
          re-frame                           {:mvn/version "0.10.6"}
          reagent                            {:mvn/version "0.8.1"}
-         sqlingvo                           {:mvn/version "0.9.28"}
+         sqlingvo                           {:mvn/version "0.9.29"}
          thheller/shadow-cljsjs             {:mvn/version "0.0.16"}}
 
  :aliases {:outdated {:extra-deps {olical/depot {:mvn/version "1.5.0"}}
