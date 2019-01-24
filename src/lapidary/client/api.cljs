@@ -53,21 +53,22 @@
    :response-format (ajax/transit-response-format)})
 
 (defn sql-execute [sql]
-  (if (vector? (ffirst sql))
-    {:uri             (str base-url "/api/query")
-     :method          :post
-     :params          {:transaction sql}
-     :format          (ajax/transit-request-format)
-     :response-format (ajax/transit-response-format)}
-    {:uri             (str base-url "/api/query")
-     :method          :post
-     :params          {:execute sql}
-     :format          (ajax/transit-request-format)
-     :response-format (ajax/transit-response-format)}))
+  {:uri             (str base-url "/api/query")
+   :method          :post
+   :params          {:execute sql}
+   :format          (ajax/transit-request-format)
+   :response-format (ajax/transit-response-format)})
+
+(defn sql-transaction [all-sql]
+  {:uri             (str base-url "/api/query")
+   :method          :post
+   :params          {:transaction all-sql}
+   :format          (ajax/transit-request-format)
+   :response-format (ajax/transit-response-format)})
 
 (defn create-log-table [table]
   (-> (sql-query/create-log-table table)
-      (sql-execute)))
+      (sql-transaction)))
 
 (defn drop-log-table [table]
   (-> (sql-query/drop-log-table table)
@@ -87,7 +88,7 @@
 
 (defn delete-table [table]
   (-> (sql-query/delete-table table)
-      (sql-execute)))
+      (sql-transaction)))
 
 (defn get-table-options [table]
   (-> (sql-query/get-table-options table)
