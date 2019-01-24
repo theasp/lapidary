@@ -1,9 +1,9 @@
-(ns lapidary.server.auth-middleware
+(ns lapidary.server.web.auth-middleware
   (:require
    [clojure.string :as str]
    [lapidary.server.config :refer [env]]
    [lapidary.server.jwt :as jwt]
-   [lapidary.server.response :as response]
+   [lapidary.server.web.response :as response]
    [mount.core :refer [defstate]]
    [macchiato.auth.backends.session :as session]
    [macchiato.auth.middleware :as m-auth]

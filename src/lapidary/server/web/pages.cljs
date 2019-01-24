@@ -1,7 +1,8 @@
-(ns lapidary.server.web-pages
+(ns lapidary.server.web.pages
   (:require
    [hiccups.runtime :as hiccups]
    [macchiato.util.response :as r]
+   [lapidary.routes :as routes]
    [taoensso.timbre :as timbre
     :refer-macros [tracef debugf infof warnf errorf]])
   (:require-macros
@@ -39,7 +40,7 @@
 (defn include-js [url]
   [:script {:src url}])
 
-(defn html-headers [{:keys [path-for config title subtitle] :as props}]
+(defn html-headers [{:keys [config title subtitle] :as props}]
   [:head
    [:title (if subtitle (str title " - " subtitle) title)]
    [:meta {:charset "utf-8"}]
@@ -48,7 +49,7 @@
            :mobile-web-app-capable       "yes"
            :apple-mobile-web-app-capable "yes"}]
    (include-css bulma-url)
-   (include-css (str (path-for :css nil) "style.css"))
+   (include-css (str (routes/path-for :css nil) "style.css"))
    #_(include-css fa-url)
    (include-css mdi-url)
    [:link {:rel "manifest" :href "manifest.json"}]
@@ -66,22 +67,24 @@
     (when (:js props)
       (:js props))]])
 
-(defn app-page [{:keys [path-for js-path] :as props}]
-  (if-let [js-path (str (path-for :js) "app.js")]
-    (let [props (assoc props :js (include-js js-path))]
-      (fn [req]
-        (-> (page-template props nil)
-            (->html5)
-            (r/ok)
-            (r/content-type "text/html"))))
-    (errorf "Unable to determine route for :js!")))
+(defn app-page [req res raise]
+  (-> {:title "Lapidary"
+       :js    (include-js (str (routes/path-for :js) "app.js"))}
+      (page-template nil)
+      (->html5)
+      (r/ok)
+      (r/content-type "text/html")
+      (res)))
 
-(defn not-found [props]
-  (fn [req]
-    (-> (page-template props
-                       [:main.mdl-layout__content
-                        [:h1
-                         (str "File Not Found: " (:uri req) "\n")]])
-        (->html5)
-        (r/not-found)
-        (r/content-type "text/html"))))
+(defn not-found [req res raise]
+  (-> {:title "Lapidary - Not Found"}
+      (page-template [:main.mdl-layout__content
+                      [:h1
+                       (str "File Not Found: " (:uri req) "\n")]])
+      (->html5)
+      (r/not-found)
+      (r/content-type "text/html")
+      (res)))
+
+(def handlers {:page/app       app-page
+               :page/not-found not-found})

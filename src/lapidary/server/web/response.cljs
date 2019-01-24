@@ -1,4 +1,4 @@
-(ns lapidary.server.response
+(ns lapidary.server.web.response
   (:require
    [macchiato.util.response :as r]
    [taoensso.timbre :as timbre

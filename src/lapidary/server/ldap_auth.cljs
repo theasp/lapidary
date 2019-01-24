@@ -2,7 +2,7 @@
   (:require
    [clojure.walk :refer [postwalk]]
    ["ldapauth-fork" :as LdapAuth]
-   [lapidary.server.auth-middleware :as auth]
+   [lapidary.server.web.auth-middleware :as auth]
    [lapidary.server.config :refer [env]]
    [mount.core :refer [defstate]]
    ;;   ["bunyan" :as bunyan]

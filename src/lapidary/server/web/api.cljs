@@ -1,4 +1,4 @@
-(ns lapidary.server.api
+(ns lapidary.server.web.api
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]])
   (:require
@@ -14,8 +14,8 @@
     :as async]
    [ca.gt0.theasp.macchiato-core-async :as m-async]
    [lapidary.server.config :as config :refer [env]]
-   [lapidary.server.auth-middleware :as auth]
-   [lapidary.server.response :as response]
+   [lapidary.server.web.auth-middleware :as auth]
+   [lapidary.server.web.response :as response]
    [macchiato.util.response :as r]
    [macchiato.middleware.anti-forgery :as csrf]
    [mount.core :refer [defstate]]
@@ -27,6 +27,7 @@
   data)
 
 (defn api-query-execute [req client sql]
+  #_(debugf "Execute: %s" sql)
   (let [start-time (js/Date.now)
         result     (pg/execute! client sql)]
     (go
@@ -44,6 +45,7 @@
 (def commit-transaction ["COMMIT TRANSACTION"])
 
 (defn api-query-transaction [req client all-sql]
+  #_(debugf "Transaction: %s" all-sql)
   (go
     (let [start-time (js/Date.now)
           result     (<! (pg/execute! client begin-transaction))]
@@ -75,9 +77,7 @@
 (defn api-query []
   (-> (fn [req]
         #_(debugf "api-query")
-        (let [body        (:body req)
-              execute     (:execute body)
-              transaction (:transaction body)]
+        (let [{:keys [execute transaction] :as body} (:body req)]
           (if (and (nil? execute) (nil? transaction))
             (response/bad-request req "Query requires execute or transaction")
             (go
@@ -99,8 +99,6 @@
       (auth/wrap-authorization #{:admin})
       (auth/wrap-authentication @env)
       (stats/wrap-stats :api-query)))
-
-
 
 (defn api-login-sign-ok [req res raise identity token]
   (debugf "Login ok: %s" identity)
@@ -147,5 +145,5 @@
         (auth/wrap-session-save)
         (stats/wrap-stats :api-login))))
 
-(def api-handlers {:api-query (api-query)
-                   :api-login (api-login)})
+(def handlers {:api/query (api-query)
+               :api/login (api-login)})
