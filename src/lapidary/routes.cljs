@@ -15,5 +15,4 @@
              ["/app" :page/app]])
 
 (def router (bide/router routes))
-
 (def path-for (partial bide/resolve router))
