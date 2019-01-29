@@ -14,8 +14,9 @@
                :expire   "7d"}
    :auth      {:method "users"
                :secret "a56d91fe526ab7d7"}
-   :http      {:address "127.0.0.1"
-               :port    8080}
+   :http      {:address  "127.0.0.1"
+               :port     8080
+               :enabled? true}
    :users     {:admin {:password "ChangeMe!"
                        :role     "admin"}}
    :ldap      {:url           "ldapi:///"
