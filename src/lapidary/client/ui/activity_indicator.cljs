@@ -30,4 +30,5 @@
   (let [connections @(rf/subscribe [:active-connections :http])]
     (when-not (empty? connections)
       (debugf "Connections: %s" connections)
-      [:a {:class "button is-link is-loading"}])))
+      [:a {:title (str "Connections: " connections)
+           :class "button is-link is-loading"}])))
