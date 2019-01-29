@@ -262,7 +262,7 @@
                         (utils/debounce 250))]
     #_(debugf "FORM A: %s" @state)
     (fn [table]
-      (let [{:keys [query-str start-str end-str query-parsed dropdown]} @state
+      (let [{:keys [query-str start-str end-str query-parsed dropdown debug?]} @state
 
             query-ok?       (not (map? query-parsed))
             start-ok?       (time-valid? start-str)
@@ -283,27 +283,56 @@
         (parse-query query-str)
         #_(debugf "History: %s" (count query-history))
 
-        [:div.field.is-grouped.is-block-mobile
-         [:div.control.is-expanded.is-block-mobile
-          [:label.label "Query" (when (> result-count 0) (str " (" result-count ")"))]
-          [input-dropdown true "Query..." query-str query-ok? query-dropdown? query-history
-           #(swap! state assoc :query-str %)
-           #(submit table state)
-           #(swap! state assoc :dropdown (when % :query))]]
+        [:div
+         [:div.field.is-grouped.is-block-mobile
+          [:div.control.is-expanded.is-block-mobile
+           [:label.label "Query" (when (> result-count 0) (str " (" result-count ")"))]
+           [input-dropdown true "Query..." query-str query-ok? query-dropdown? query-history
+            #(swap! state assoc :query-str %)
+            #(submit table state)
+            #(swap! state assoc :dropdown (when % :query))]]
 
-         [:div.control.is-block-mobile
-          [:label.label "Start Time"]
-          [input-dropdown false "Start time..." start-str start-ok? start-dropdown? start-time-values
-           #(swap! state assoc :start-str %)
-           #(submit table state)
-           #(swap! state assoc :dropdown (when % :start))]]
+          [:div.control.is-block-mobile
+           [:label.label "Start Time"]
+           [input-dropdown false "Start time..." start-str start-ok? start-dropdown? start-time-values
+            #(swap! state assoc :start-str %)
+            #(submit table state)
+            #(swap! state assoc :dropdown (when % :start))]]
 
-         [:div.control.is-block-mobile
-          [:label.label "End Time"]
-          [input-dropdown false "End time..." end-str end-ok? end-dropdown? end-time-values
-           #(swap! state assoc :end-str %)
-           #(submit table state)
-           #(swap! state assoc :dropdown (when % :end))]]]))))
+          [:div.control.is-block-mobile
+           [:label.label "End Time"]
+           [input-dropdown false "End time..." end-str end-ok? end-dropdown? end-time-values
+            #(swap! state assoc :end-str %)
+            #(submit table state)
+            #(swap! state assoc :dropdown (when % :end))]]
+          [:div.control.is-block-mobile
+           [:label.label {:dangerouslySetInnerHTML {:__html "&nbsp;"}}]
+           [:button.button {:on-click #(swap! state update :debug? not)}
+            [:span.icon (ui-misc/icons :information)]]]]
+         (when debug?
+           [:div
+            [:div.field
+             [:div.control.is-expanded
+              [:label.label "Parsed Query"]
+              [:tt (str query-parsed)]]]]
+           (when-not (map? query-parsed)
+             [:div
+              [:div.field
+               [:div.control.is-expanded
+                [:label.label "SQL Where"]
+                (try
+                  [:tt (str (query/query->where query-str))]
+                  (catch js/Object e
+                    [:tt (str e)]))]]
+              [:div.field
+               [:div.control.is-expanded
+                [:label.label "SQL Query"]
+                (try
+                  [:tt (str (query/search-query table {:query-str query-str
+                                                       :start-str start-str
+                                                       :end-str   end-str}))]
+                  (catch js/Object e
+                    [:tt (str e)]))]]]))]))))
 
 (defn fields-toggle-button [table]
   (let [visible? @(rf/subscribe [:query-fields-visible? table])]

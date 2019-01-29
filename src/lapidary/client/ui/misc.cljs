@@ -127,6 +127,7 @@
    :spinner-minus-sm   [:i.mdi.mdi-18px.mdi-minus]
    :login-user-sm      [:i.mdi.mdi-18px.mdi-account]
    :login-password-sm  [:i.mdi.mdi-18px.mdi-lock]
+   :information        [:i.mdi.mid-24px.mdi-information-variant]
    :fields-visible     [:i.mdi.mdi-24px.mdi-format-list-bulleted]
    :fields-hidden      [:i.mdi.mdi-24px.mdi-format-list-bulleted]})
 
