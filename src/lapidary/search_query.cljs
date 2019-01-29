@@ -102,10 +102,10 @@
 (defn parse-term [field & options]
   (let [options (reduce #(assoc %1 (first %2) (second %2)) {} options)
         value   (get options :value)]
-    (if-let [operation (->  (:comparison options)
-                            (first)
-                            (or :auto)
-                            (operations))]
+    (if-let [operation (-> (:comparison options)
+                           (first)
+                           (or :auto)
+                           (operations))]
       (operation field value)
       (warnf "Unknown operation: %s" (get options :comparison)))))
 
@@ -116,15 +116,16 @@
    :term           parse-term
    :integer        js/parseInt
    :float          js/parseFloat
+   :string         identity
    :null           (fn [_] nil)
    :grouping       (fn [grouping]
                      (condp = (first grouping)
                        :and 'and
                        :or  'or))
+   :not            (fn [_]
+                     `not)
    :clause         (fn [& q]
-                     (if (= [:not] (first q))
-                       `(not ~q)
-                       q))
+                     q)
    :query          (fn [& q]
                      (when q
                        (if (> (count q) 1)
