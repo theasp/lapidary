@@ -307,32 +307,31 @@
             #(swap! state assoc :dropdown (when % :end))]]
           [:div.control.is-block-mobile
            [:label.label {:dangerouslySetInnerHTML {:__html "&nbsp;"}}]
-           [:button.button {:on-click #(swap! state update :debug? not)}
+           [:button {:class    [:button (when debug? :is-primary)]
+                     :on-click #(swap! state update :debug? not)}
             [:span.icon (ui-misc/icons :information)]]]]
          (when debug?
            [:div
             [:div.field
              [:div.control.is-expanded
               [:label.label "Parsed Query"]
-              [:tt (str query-parsed)]]]]
-           (when-not (map? query-parsed)
-             [:div
-              [:div.field
-               [:div.control.is-expanded
-                [:label.label "SQL Where"]
-                (try
-                  [:tt (str (query/query->where query-str))]
-                  (catch js/Object e
-                    [:tt (str e)]))]]
-              [:div.field
-               [:div.control.is-expanded
-                [:label.label "SQL Query"]
-                (try
-                  [:tt (str (query/search-query table {:query-str query-str
-                                                       :start-str start-str
-                                                       :end-str   end-str}))]
-                  (catch js/Object e
-                    [:tt (str e)]))]]]))]))))
+              [:tt (str query-parsed)]]]
+            [:div.field
+             [:div.control.is-expanded
+              [:label.label "SQL Where"]
+              (try
+                [:tt (str (query/query->where query-str))]
+                (catch js/Object e
+                  [:tt (str e)]))]]
+            [:div.field
+             [:div.control.is-expanded
+              [:label.label "SQL Query"]
+              (try
+                [:tt (str (query/search-query table {:query-str query-str
+                                                     :start-str start-str
+                                                     :end-str   end-str}))]
+                (catch js/Object e
+                  [:tt (str e)]))]]])]))))
 
 (defn fields-toggle-button [table]
   (let [visible? @(rf/subscribe [:query-fields-visible? table])]
