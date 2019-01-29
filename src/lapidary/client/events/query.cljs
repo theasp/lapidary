@@ -2,6 +2,7 @@
   (:require
    [ajax.core :as ajax]
    [clojure.walk :as walk]
+   [clojure.string :as str]
    [lapidary.utils :as utils]
    [lapidary.client.state :as state]
    [lapidary.client.db :as db]
@@ -194,13 +195,18 @@
   db)
 
 (defn query-submit [db [_ table query-str start-str end-str]]
-  (router/query-navigate! table
-                          (-> (get-in db [:view :query])
-                              (merge {:query-str query-str
-                                      :start-str start-str
-                                      :end-str   end-str
-                                      :page      0})))
-  (update-in db [:query table :history] conj ))
+  (let [query-str (str/trim query-str)
+        start-str (str/trim start-str)
+        end-str   (str/trim end-str)]
+    (router/query-navigate! table
+                            (-> (get-in db [:view :query])
+                                (merge {:query-str query-str
+                                        :start-str start-str
+                                        :end-str   end-str
+                                        :page      0}))))
+  (-> db
+      (update-in [:query table :history] conj query-str)
+      (update-in [:query table :history] dedupe)))
 
 (defn query-expand-field [db [_ table field]]
   (assoc-in db [:query table :expand-field] field))
