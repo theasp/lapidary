@@ -15,27 +15,30 @@
 (defparser p
   "
   query  = <whitespace>* ( clause )* <whitespace>*
-  clause = <whitespace>* ( not? <whitespace>* <'('> grouping clause* <')'> | not? <whitespace>* term ) <whitespace>*
-  term = ( meta-keyword / record-keyword ) <':'> comparison? value <whitespace>*
+  clause = <whitespace>* ( not? <whitespace>* <'('> grouping clause* <')'> | not? term ) <whitespace>*
+  term = ( meta-keyword / record-keyword ) <':'> (range / value-list / value) <whitespace>*
+
+  range = range-start <whitespace>+ <'to'> <whitespace>+ range-end
+
+  range-start = (range-start-include / range-start-exclude) <whitespace>* value
+  range-start-include = <'['>
+  range-start-exclude = <'{'>
+
+  range-end = value <whitespace>* (range-end-include / range-end-exclude)
+  range-end-include = <']'>
+  range-end-exclude = <'}'>
+
+  value-list = <'('> (<whitespace>* value <whitespace>*)+ <')'>
 
   grouping = and | or
   meta-keyword = <'@'> WORD
   record-keyword = WORD
   whitespace = #'\\s+'
 
-  not = < '!' / 'not' whitespace >
+  not = < '!' / ('not' whitespace) >
   and = < 'and' | '&&' >
   or = < 'or' | '||' >
 
-  lt =   < '<'  / 'lt.' >
-  le =   < '<=' / 'le.' >
-  gt =   < '>'  / 'gt.' >
-  ge =   < '>=' / 'ge.' >
-  eq =   < '==' / '='  / 'eq.' >
-  fts =  < '~' / '@@' / 'fts.' >
-  auto = < 'auto.' / '' >
-
-  comparison = le / ge / lt / gt / eq / fts / auto
   value = string / float / integer / null / word
 
   null = <'null' | 'nil' | 'undefined'>
@@ -43,9 +46,8 @@
   string = <'\"'> STRING <'\"'>
   <STRING> = #'([^\"]|\\\\.)*'
 
-
-  word = #'[^\":() ]+'
-  <WORD> = #'[^\":() ]+'
+  word = #'[^\":()\\[\\]{} ]+'
+  <WORD> = #'[^\":()\\[\\]{} ]+'
 
   integer = INTEGER
   float = FLOAT
@@ -70,67 +72,82 @@
                :text)
          ~(str value)))
 
+(defn field-op [field op value]
+  (if (api/path-shallow? field)
+    `(~op ~(first field) ~value)
+    `(~op ~(api/path-value field) (cast ~(utils/clj->json value) :jsonb))))
+
 (defn op-auto [field value]
-  `(or (like ~(api/path-text field)
-             ~(str "%" value "%"))
-       (~(keyword "@@")
-        (to_tsvector "english" ~(api/path-value field))
-        (plainto_tsquery "english" ~(str value)))))
+  (if (number? value)
+    (field-op field `= value)
+    `(or (like ~(api/path-text field)
+               ~(str "%" value "%"))
+         (~(keyword "@@")
+          (to_tsvector "english" ~(api/path-value field))
+          (plainto_tsquery "english" ~(str value))))))
 
-(defn op [f]
-  (fn [field value]
-    (if (api/path-shallow? field)
-      `(~f ~(first field) ~value)
-      `(~f ~(api/path-value field) (cast ~(utils/clj->json value) :jsonb)))))
+(defn match-range [field [start end]]
+  (debugf "Range %s to %s" start end)
+  (let [start  (when-not (= "*" (:value start))
+                 (field-op field (:op start) (:value start)))
+        end    (when-not (= "*" (:value end))
+                 (field-op field (:op end) (:value end)))
+        result (remove nil? [start end])]
+    (if (> (count result) 1)
+      (conj result `and)
+      (first result))))
 
-(def op-eq (op '=))
-(def op-le (op '<=))
-(def op-lt (op '<))
-(def op-gt (op '>))
-(def op-ge (op '>=))
+(defn match-value [field value]
+  (op-auto field (first value)))
 
-(def operations
-  {:auto op-auto
-   :fts  op-fts
-   :like op-like
-   :eq   op-eq
-   :le   op-le
-   :lt   op-lt
-   :gt   op-gt
-   :ge   op-ge})
+(defn match-value-list [field values]
+  (let [result (map #(op-auto field (second %)) values)]
+    (if (> (count result) 1)
+      (-> (mapcat rest result)
+          (conj `or))
+      (first result))))
 
-(defn parse-term [field & options]
-  (let [options (reduce #(assoc %1 (first %2) (second %2)) {} options)
-        value   (get options :value)]
-    (if-let [operation (-> (:comparison options)
-                           (first)
-                           (or :auto)
-                           (operations))]
-      (operation field value)
-      (warnf "Unknown operation: %s" (get options :comparison)))))
+(defn parse-term [field args]
+  (let [value-type (first args)
+        options    (rest args)]
+    #_(debugf "Options: %s" options)
+    (case value-type
+      :range      (match-range field options)
+      :value      (match-value field options)
+      :value-list (match-value-list field options))))
 
 (def parse-tx
-  {:meta-keyword   (fn [k] [(keyword k)])
-   :record-keyword (fn [k] [:record (keyword k)])
-   :word           identity
-   :term           parse-term
-   :integer        js/parseInt
-   :float          js/parseFloat
-   :string         identity
-   :null           (fn [_] nil)
-   :grouping       (fn [grouping]
-                     (condp = (first grouping)
-                       :and 'and
-                       :or  'or))
-   :not            (fn [_]
-                     `not)
-   :clause         (fn [& q]
-                     q)
-   :query          (fn [& q]
-                     (when q
-                       (if (> (count q) 1)
-                         (conj q 'or)
-                         (first q))))})
+  {:meta-keyword        (fn [k] [(keyword k)])
+   :record-keyword      (fn [k] [:record (keyword k)])
+   :word                identity
+   :term                parse-term
+   :integer             js/parseInt
+   :float               js/parseFloat
+   :string              identity
+   :null                (constantly nil)
+   :and                 (constantly :and)
+   :or                  (constantly :or)
+   :range-start-include (constantly `>=)
+   :range-start-exclude (constantly `>)
+   :range-end-include   (constantly '<=)
+   :range-end-exclude   (constantly `<)
+   :range-start         (fn [op value]
+                          {:op    op
+                           :value (-> value second)})
+   :range-end           (fn [value op]
+                          {:op    op
+                           :value (-> value second)})
+   :grouping            (fn [type]
+                          (condp = type
+                            :and 'and
+                            :or  'or))
+   :not                 (constantly 'not)
+   :clause              list
+   :query               (fn [& q]
+                          (when q
+                            (if (> (count q) 1)
+                              (conj q 'or)
+                              (first q))))})
 
 (defn parse-error [{:keys [index reason line column text] :as err}]
   (errorf "Error parsing query (%s,%s): %s %s" line column index text)
