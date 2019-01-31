@@ -192,11 +192,16 @@
         (str "…"))
     value))
 
+(defn has-to-string? [obj]
+  (and (object? obj)
+       (some? (.-toString obj))))
+
 (defn format-value-label [value]
   [:span {:title (str value)}
-   (cond (nil? value) [:i "<nil>"]
-         (= value "") [:i "<empty string>"]
-         :default     (format-label 24 (str value)))])
+   (cond (nil? value)                     [:i "<nil>"]
+         (= value "")                     [:i "<empty string>"]
+         (has-to-string? (clj->js value)) (format-label 24 (.toString (clj->js value)))
+         :default                         (format-label 24 (str value)))])
 
 (def colors ["dark" "info" "success" "warning" "danger"])
 
@@ -213,7 +218,9 @@
 (def type-formats {:timestamptz {:short time-format-long
                                  :long  time-format-long}
                    :timestamp   {:short time-format-long
-                                 :long  time-format-long}})
+                                 :long  time-format-long}
+                   :default     {:short str
+                                 :log   str}})
 
 (def field-type-names
   {:string    (:type-string icons)
@@ -234,7 +241,8 @@
 (def id-column :id)
 
 (defn format-value [value type size]
-  (let [format-fn (get-in type-formats [type size] str)]
+  (let [format-fn (or (get-in type-formats [type size])
+                      (get-in type-formats [:default size]))]
     (try (format-fn value)
          (catch js/Object e
            (warnf "Formatter caught error: %s %s" e

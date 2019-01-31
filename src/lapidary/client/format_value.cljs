@@ -8,16 +8,19 @@
 
 (defn format-value [fmt value]
   (try
-    (goog.string/format fmt value)
+    (goog.string/format fmt (if (object? value)
+                              (js/JSON.stringify value)
+                              (str value)))
     (catch js/Object e
       (warnf "Bad format: %s %s" fmt e)
       (str value))))
 
 (defn format-timestamp [fmt time]
   (try
-    (when (some? time)
+    (if (some? time)
       (let [time (sugar-date/Date.create time)]
-        (.format time fmt)))
+        (.format time fmt))
+      "<nil>")
     (catch js/Object e
       (warnf "Unable to format time: %s" e)
       (str time))))
@@ -59,5 +62,6 @@
         format-fn (:fn format)
         fmt       (if (or (nil? fmt) (= fmt ""))
                     (:fmt format)
-                    fmt)]
+                    fmt)
+        value     (clj->js value)]
     (format-fn fmt value)))

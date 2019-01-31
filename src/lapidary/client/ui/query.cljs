@@ -22,7 +22,11 @@
     :refer-macros (tracef debugf infof warnf errorf)]))
 
 (defn stream-detail-value [table field value selected? set-selected column?]
-  (let [type (utils/detect-type value)]
+  (let [type      (utils/detect-type value)
+        value     (clj->js value)
+        value-str (if (object? value)
+                    (js/JSON.stringify value)
+                    (str value))]
     [:div.control
      [:div.tags.has-addons.buttons
       [:a {:class    (str "tag " (if column? "is-primary" "is-link"))
@@ -30,16 +34,15 @@
        [:tt (ui-misc/format-path field)]]
       [:a.tag.is-dark
        {:on-click #(set-selected (if selected? nil field))}
-       [:tt {:title value}
-        (-> value
-            (ui-misc/format-value type :long)
+       [:tt {:title value-str}
+        (-> (format-value/format value :auto nil)
             (utils/shorten 120))]]
       (when selected?
         [:span.tag.is-light
          [:div.buttons.has-addon
           [:a.button.is-link.is-small
            {:title    "Copy Value"
-            :on-click #(copy (str value))}
+            :on-click #(copy value-str)}
            [:span.icon (:value-copy-sm ui-misc/icons)]]
           [:a.button.is-success.is-small
            {:title    "Require Value"
@@ -311,27 +314,30 @@
                      :on-click #(swap! state update :debug? not)}
             [:span.icon (ui-misc/icons :information)]]]]
          (when debug?
-           [:div
-            [:div.field
-             [:div.control.is-expanded
-              [:label.label "Parsed Query"]
-              [:tt (str query-parsed)]]]
-            [:div.field
-             [:div.control.is-expanded
-              [:label.label "SQL Where"]
-              (try
-                [:tt (str (query/query->where query-str))]
-                (catch js/Object e
-                  [:tt (str e)]))]]
-            [:div.field
-             [:div.control.is-expanded
-              [:label.label "SQL Query"]
-              (try
-                [:tt (str (query/search-query table {:query-str query-str
-                                                     :start-str start-str
-                                                     :end-str   end-str}))]
-                (catch js/Object e
-                  [:tt (str e)]))]]])]))))
+           (let [where  (try (query/query->where query-str)
+                             (catch js/Object e e))
+                 parsed (try (query/search-query table {:query-str query-str
+                                                        :start-str start-str
+                                                        :end-str   end-str})
+                             (catch js/Object e [e]))]
+             [:div
+              [:div.field
+               [:div.control.is-expanded
+                [:label.label "Parsed Query"]
+                [:tt (str query-parsed)]]]
+              [:div.field
+               [:div.control.is-expanded
+                [:label.label "SQL Where"]
+                [:tt (str where)]]]
+              [:div.field
+               [:div.control.is-expanded
+                [:label.label "SQL Query"]
+                [:tt (str (first parsed))]]]
+
+              [:div.field
+               [:div.control.is-expanded
+                [:label.label "SQL Placeholders"]
+                [:tt (str (rest parsed))]]]]))]))))
 
 (defn fields-toggle-button [table]
   (let [visible? @(rf/subscribe [:query-fields-visible? table])]
