@@ -16,9 +16,11 @@
   "
   query  = <whitespace>* ( clause )* <whitespace>*
   clause = <whitespace>* ( not? <whitespace>* <'('> grouping clause* <')'> | not? term ) <whitespace>*
-  term = ( meta-keyword / record-keyword ) <':'> (range / value-list / value) <whitespace>*
+  term = ( meta-keyword / record-keyword ) <':'> (range / value-list / op-value) <whitespace>*
 
-  range = range-start <whitespace>+ <'to'> <whitespace>+ range-end
+  op-value = op? value
+  range = range-start <range-sep> range-end
+  range-sep = (whitespace+ 'to' whitespace+) / (whitespace* '..' whitespace*)
 
   range-start = (range-start-include / range-start-exclude) <whitespace>* value
   range-start-include = <'['>
@@ -28,7 +30,7 @@
   range-end-include = <']'>
   range-end-exclude = <'}'>
 
-  value-list = <'('> (<whitespace>* value <whitespace>*)+ <')'>
+  value-list = <'('> (<whitespace>* op-value <whitespace>*)+ <')'>
 
   grouping = and | or
   meta-keyword = <'@'> WORD
@@ -38,6 +40,18 @@
   not = < '!' / ('not' whitespace) >
   and = < 'and' | '&&' >
   or = < 'or' | '||' >
+
+  op = op-gt / op-lt / op-ge / op-le / op-ne / op-eq / op-regex-i / op-not-regex-i / op-regex / op-not-regex
+  op-gt = <'>'>
+  op-lt = <'<'>
+  op-ge = <'>='>
+  op-le = <'<='>
+  op-ne = <'!=' | '<>'>
+  op-eq = <'='>
+  op-regex = <'~'>
+  op-not-regex = <'!~'>
+  op-regex-i = <'~~'>
+  op-not-regex-i = <'!~~'>
 
   value = string / float / integer / null / word
 
@@ -54,40 +68,37 @@
 
   <EXPONENT> = #'[eE][+-]?[0-9]+'
   <FLOAT> = #'[+-]?[0-9]+\\.[0-9]+' EXPONENT?
-  <INTEGER> = #'[+-]?[0-9]+' EXPONENT?"
+  <INTEGER> = #'[+-]?[0-9]+' EXPONENT?
+"
   :string-ci true)
-
 
 (defn op-fts [field value]
   `(~(keyword "@@")
-    (to_tsvector "english" ~(if (api/path-shallow? field)
-                              (first field)
-                              (api/path-text field)))
-    (plainto_tsquery "english" ~(str value))))
+    (:to_tsvector "english" ~(if (api/path-shallow? field)
+                               (first field)
+                               (api/path-text field)))
+    (:plainto_tsquery "english" ~(str value))))
 
-(defn op-like [field value]
-  `(like (cast ~(if (api/path-shallow? field)
-                  (first field)
-                  (api/path-text field))
-               :text)
-         ~(str value)))
 
 (defn field-op [field op value]
   (if (api/path-shallow? field)
     `(~op ~(first field) ~value)
-    `(~op ~(api/path-value field) (cast ~(utils/clj->json value) :jsonb))))
+    `(~op ~(api/path-value field) (:cast ~(utils/clj->json value) :jsonb))))
+
+(defn field-op-str [field op value]
+  `(~op (cast ~(if (api/path-shallow? field)
+                 (first field)
+                 (api/path-text field))
+              :text)
+    ~(str value)))
 
 (defn op-auto [field value]
   (if (number? value)
     (field-op field `= value)
-    `(or (like ~(api/path-text field)
-               ~(str "%" value "%"))
-         (~(keyword "@@")
-          (to_tsvector "english" ~(api/path-value field))
-          (plainto_tsquery "english" ~(str value))))))
+    `(:or ~(field-op-str field :like (str "%" value "%"))
+          ~(op-fts field value))))
 
 (defn match-range [field [start end]]
-  (debugf "Range %s to %s" start end)
   (let [start  (when-not (= "*" (:value start))
                  (field-op field (:op start) (:value start)))
         end    (when-not (= "*" (:value end))
@@ -100,11 +111,20 @@
 (defn match-value [field value]
   (op-auto field (first value)))
 
+(defn match-op-value [field value]
+  (let [{:keys [op value]} (into {} value)]
+    (case op
+      :regex       (field-op-str field (keyword "~") value)
+      :not-regex   (field-op-str field (keyword "!~") value)
+      :regex-i     (field-op-str field (keyword "~*") value)
+      :not-regex-i (field-op-str field (keyword "!~*") value)
+      (some? op)   (field-op field op value)
+      (op-auto field value))))
+
 (defn match-value-list [field values]
-  (let [result (map #(op-auto field (second %)) values)]
+  (let [result (map #(match-op-value field (rest %)) values)]
     (if (> (count result) 1)
-      (-> (mapcat rest result)
-          (conj `or))
+      (conj result `or)
       (first result))))
 
 (defn parse-term [field args]
@@ -113,8 +133,24 @@
     #_(debugf "Options: %s" options)
     (case value-type
       :range      (match-range field options)
-      :value      (match-value field options)
-      :value-list (match-value-list field options))))
+      :value-list (match-value-list field options)
+      :op-value   (match-op-value field options)
+
+      (errorf "Unable process term %s" value-type))))
+
+(defn parse-query [& q]
+  (when q
+    (if (> (count q) 1)
+      (conj q 'or)
+      (first q))))
+
+(defn parse-range-start [op value]
+  {:op    op
+   :value (-> value second)})
+
+(defn parse-range-end [value op]
+  {:op    op
+   :value (-> value second)})
 
 (def parse-tx
   {:meta-keyword        (fn [k] [(keyword k)])
@@ -127,31 +163,30 @@
    :null                (constantly nil)
    :and                 (constantly :and)
    :or                  (constantly :or)
-   :range-start-include (constantly `>=)
-   :range-start-exclude (constantly `>)
-   :range-end-include   (constantly '<=)
-   :range-end-exclude   (constantly `<)
-   :range-start         (fn [op value]
-                          {:op    op
-                           :value (-> value second)})
-   :range-end           (fn [value op]
-                          {:op    op
-                           :value (-> value second)})
-   :grouping            (fn [type]
-                          (condp = type
-                            :and 'and
-                            :or  'or))
-   :not                 (constantly 'not)
+   :op-eq               (constantly :=)
+   :op-lt               (constantly :<)
+   :op-le               (constantly :<=)
+   :op-gt               (constantly :>)
+   :op-ge               (constantly :>=)
+   :op-ne               (constantly :not=)
+   :op-regex            (constantly :regex)
+   :op-not-regex        (constantly :not-regex)
+   :op-regex-i          (constantly :regex-i)
+   :op-not-regex-i      (constantly :not-regex-i)
+   :range-start-include (constantly :>=)
+   :range-start-exclude (constantly :>)
+   :range-end-include   (constantly :<=)
+   :range-end-exclude   (constantly :<)
+   :range-start         parse-range-start
+   :range-end           parse-range-end
+   :grouping            identity
+   :not                 (constantly :not)
    :clause              list
-   :query               (fn [& q]
-                          (when q
-                            (if (> (count q) 1)
-                              (conj q 'or)
-                              (first q))))})
+   :query               parse-query})
 
 (defn parse-error [{:keys [index reason line column text] :as err}]
-  (errorf "Error parsing query (%s,%s): %s %s" line column index text)
-  (errorf "Reason: %s" reason)
+  #_(errorf "Error parsing query (%s,%s): %s %s" line column index text)
+  #_(errorf "Reason: %s" reason)
   err)
 
 (defn query-parse [query]
@@ -181,10 +216,10 @@
       (debugf "deep: %s" (api/path-value field)))
 
   (if (api/path-shallow? field)
-    `(in ~(first field)
-         ~(sql/values (map vector values)))
-    `(in ~(api/path-value field)
-         ~(sql/values (map data->json values)))))
+    `(:in ~(first field)
+          ~(sql/values (map vector values)))
+    `(:in ~(api/path-value field)
+          ~(sql/values (map data->json values)))))
 
 
 (defn empty-filter? [[key value]]
