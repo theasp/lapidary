@@ -84,23 +84,26 @@
                         (str value))]
         ^{:key field}
         [:tr
-         [:td
-          [:div.buttons.has-addon
-           [:a.button.is-link.is-small
-            {:title    "Copy Value"
-             :on-click #(copy value-str)}
-            [:span.icon (:value-copy-sm ui-misc/icons)]]
-           [:a.button.is-success.is-small
-            {:title    "Require Value"
-             :on-click #(rf/dispatch [:query-filter-add table :require field value])}
-            [:span.icon (:value-require-sm ui-misc/icons)]]
-           [:a.button.is-danger.is-small
-            {:title    "Exclude Value"
-             :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
-            [:span.icon (:value-exclude-sm ui-misc/icons)]]]]
-         [:td
+         [:td.is-size-7-mobile
+          [:div.field.has-addons
+           [:div.control
+            [:button.button.is-link.is-small
+             {:title    "Copy Value"
+              :on-click #(copy value-str)}
+             [:span.icon (:value-copy-sm ui-misc/icons)]]]
+           [:div.control
+            [:a.button.is-success.is-small
+             {:title    "Require Value"
+              :on-click #(rf/dispatch [:query-filter-add table :require field value])}
+             [:span.icon (:value-require-sm ui-misc/icons)]]]
+           [:div.control
+            [:a.button.is-danger.is-small
+             {:title    "Exclude Value"
+              :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
+             [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]
+         [:td.is-size-7-mobile.ellipsis
           [:tt (ui-misc/format-path field)]]
-         [:td
+         [:td.is-size-7-mobile.ellipsis
           [:tt {:title value-str}
            (-> (format-value/format value :auto nil)
                (utils/shorten 120))]]]))]])
