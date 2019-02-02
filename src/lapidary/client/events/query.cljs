@@ -403,6 +403,11 @@
                                (assoc-in [:column-options column :format] format)))
    nil))
 
+(rf/reg-event-db
+ :query-detail-table
+ (fn [db [_ table detail-table?]]
+   (assoc-in db [:query table :detail-table?] detail-table?)))
+
 (rf/reg-event-fx :query-init query-init)
 (rf/reg-event-fx :query-refresh query-refresh)
 (rf/reg-event-fx :query-load query-load)

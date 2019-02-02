@@ -214,3 +214,8 @@
  :query-history
  (fn [db [_ table]]
    (get-in db [:query table :history])))
+
+(rf/reg-sub
+ :query-detail-table?
+ (fn [db [_ table]]
+   (get-in db [:query table :detail-table?])))

@@ -127,45 +127,43 @@
                (utils/shorten 120))]]]))]])
 
 (defn detail [table log columns]
-  (let [as-table? (atom false)]
-    (fn [table log columns]
-      (let [columns (set columns)]
-        [:tr.is-light
-         [:td.is-size-7-mobile {:col-span (-> columns count)}
-          [:button {:class    [:button :is-pulled-right	(when @as-table? :is-primary)]
-                    :on-click #(swap! as-table? not)}
-           [:span.icon.is-small (ui-misc/icons :table)]]
-          (if @as-table?
-            [detail-table table log columns]
-            [detail-tags table log columns])]]))))
-
+  (let [columns       (set columns)
+        detail-table? @(rf/subscribe [:query-detail-table? table])]
+    [:tr.is-light
+     [:td.is-size-7-mobile {:col-span (-> columns count)}
+      [:button {:class    [:button :is-pulled-right (when detail-table? :is-primary)]
+                :on-click #(rf/dispatch [:query-detail-table table (not detail-table?)])}
+       [:span.icon.is-small (ui-misc/icons :table)]]
+      (if detail-table?
+        [detail-table table log columns]
+        [detail-tags table log columns])]]))
 
 (defn log-table-entry [table log columns selected? column-options]
-  (let [checked? (atom false)
-        check-fn (fn [e]
-                   (swap! checked? not)
-                   (.stopPropagation e))]
-    (fn [table log columns selected? column-options]
-      [:tr {:on-click #(rf/dispatch [:query-expand-log table (if selected? nil (get log ui-misc/id-column))])
-            :class    (when selected? "is-selected is-link is-unselectable")}
-       #_[:td
-          [:button
-           {:class    (str "button is-small" (when @checked? " is-primary"))
-            :on-click check-fn}
-           [:span.icon
-            (if @checked?
-              (:checkbox-checked ui-misc/icons)
-              (:checkbox-unchecked ui-misc/icons))]]]
-       (for [column columns]
-         (let [value   (get-in log column)
-               options (get column-options column)
-               type    (-> (get options :type :auto)
-                           (utils/update-type value))
-               fmt     (get options :format "")]
-           ^{:key column}
-           [:td.is-size-7-mobile {:title (str value)}
-            #_(js/console.log value)
-            (format-value/format value type fmt)]))])))
+  #_(let [checked? (atom false)
+          check-fn (fn [e]
+                     (swap! checked? not)
+                     (.stopPropagation e))]
+      (fn [table log columns selected? column-options]))
+  [:tr {:on-click #(rf/dispatch [:query-expand-log table (if selected? nil (get log ui-misc/id-column))])
+        :class    (when selected? "is-selected is-link is-unselectable")}
+   #_[:td
+      [:button
+       {:class    (str "button is-small" (when @checked? " is-primary"))
+        :on-click check-fn}
+       [:span.icon
+        (if @checked?
+          (:checkbox-checked ui-misc/icons)
+          (:checkbox-unchecked ui-misc/icons))]]]
+   (for [column columns]
+     (let [value   (get-in log column)
+           options (get column-options column)
+           type    (-> (get options :type :auto)
+                       (utils/update-type value))
+           fmt     (get options :format "")]
+       ^{:key column}
+       [:td.is-size-7-mobile {:title (str value)}
+        #_(js/console.log value)
+        (format-value/format value type fmt)]))])
 
 (defn log-table-header-column [table column options sort? reverse? last?]
   (let [width (-> options (get :width 12) (str "em"))]
