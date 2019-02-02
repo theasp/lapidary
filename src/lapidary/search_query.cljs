@@ -86,10 +86,10 @@
     `(~op ~(api/path-value field) (:cast ~(utils/clj->json value) :jsonb))))
 
 (defn field-op-str [field op value]
-  `(~op (cast ~(if (api/path-shallow? field)
-                 (first field)
-                 (api/path-text field))
-              :text)
+  `(~op (:cast ~(if (api/path-shallow? field)
+                  (first field)
+                  (api/path-text field))
+               :text)
     ~(str value)))
 
 (defn op-auto [field value]
@@ -204,7 +204,7 @@
       (insta/transform parse-tx parsed))))
 
 (defn cast-json [data]
-  `(cast ~(.stringify js/JSON (clj->js data)) :jsonb))
+  `(:cast ~(.stringify js/JSON (clj->js data)) :jsonb))
 
 (defn data->json [data]
   [(cast-json data)])
