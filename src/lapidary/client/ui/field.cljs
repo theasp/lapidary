@@ -15,7 +15,7 @@
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
 
-(defn stream-field-table-row [table field value percentage]
+(defn field-table-row [table field value percentage]
   [:tr
    [:td.is-narrow {:style {:vertical-align :middle}}
     [:div.field.has-addons
@@ -40,7 +40,7 @@
          (str value))
        [:i "[null]"])]]])
 
-(defn stream-field-header [table field all-values?]
+(defn field-header [table field all-values?]
   [:header.modal-card-head
    [:button {:title    (if all-values? "Filtered Values" "All Values")
              :class    (str "button" (when-not all-values? " is-primary"))
@@ -53,16 +53,16 @@
    [:p.modal-card-title (ui-misc/format-path field)]
    [:button.delete {:on-click #(rf/dispatch [:query-show-field-close table])}]])
 
-(defn stream-field-body [table field values]
+(defn field-body [table field values]
   [:section.modal-card-body
    [:table.table.is-fullwidth.is-narrow
     [:tbody
      (for [value values]
        (let [{:keys [value count percentage]} value]
          ^{:key (if (some? value) value 'utils/Null)}
-         [stream-field-table-row table field value percentage]))]]])
+         [field-table-row table field value percentage]))]]])
 
-(defn stream-field-dialog [table]
+(defn field-dialog [table]
   (let  [show-field   @(rf/subscribe [:query-show-field table])
          field        (:name show-field)
          field-values @(rf/subscribe [:field-values table field])
@@ -80,8 +80,8 @@
       [:div.modal.is-active
        [:div.modal-background]
        [:div.modal-card
-        [stream-field-header table field all-values?]
-        [stream-field-body table field values]
+        [field-header table field all-values?]
+        [field-body table field values]
         [:footer.modal-card-foot
          [:div  {:style {:width "100%"}}
           [pagination/pagination page set-page last-page]]]]]]]))

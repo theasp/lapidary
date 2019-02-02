@@ -17,7 +17,7 @@
        (first)))
 
 
-(defn stream-field-selected-controls [table name type freq]
+(defn field-selected-controls [table name type freq]
   (let [columns   @(rf/subscribe [:query-columns table])
         pos       (column-pos columns name)
         is-first? (= pos 0)
@@ -49,7 +49,7 @@
        :on-click info-fn}
       [:span.icon (:info-sm ui-misc/icons)]]]))
 
-(defn stream-field-available-controls [table name type freq]
+(defn field-available-controls [table name type freq]
   (let [add-column #(rf/dispatch [:query-column-add table name])
         field-info (when-not (= :timestamp type)
                      (-> #(rf/dispatch [:query-show-field table name])
@@ -65,7 +65,7 @@
        :on-click field-info}
       [:span.icon (:info-sm ui-misc/icons)]]]))
 
-(defn stream-field [table type name selected? used? freq]
+(defn field [table type name selected? used? freq]
   (let [formats  (get ui-misc/type-formats type)
         on-click (when-not selected?
                    #(rf/dispatch [:query-expand-field table name]))]
@@ -87,10 +87,10 @@
           [ui-misc/battery-icon freq]
           #_[ui-misc/popularity freq]]
          (if used?
-           [stream-field-selected-controls table name type freq]
-           [stream-field-available-controls table name type freq])])]]))
+           [field-selected-controls table name type freq]
+           [field-available-controls table name type freq])])]]))
 
-(defn stream-field-values-list [table name]
+(defn field-values-list [table name]
   (let [values (->> @(rf/subscribe [:field-values table name])
                     (:values)
                     (sort-by :count)
@@ -179,11 +179,11 @@
             (let [{:keys [freq type]} (get fields name {:freq 0 :type nil})
                   selected?           (= name expand-field)]
               [^{:key name}
-               [stream-field table type name selected? true (/ freq total)]
+               [field table type name selected? true (/ freq total)]
 
                (when selected?
-                 ^{:key {:type :stream-field-values :name name}}
-                 [stream-field-values-list table name])]))
+                 ^{:key {:type :field-values :name name}}
+                 [field-values-list table name])]))
           (apply concat))]))
 
 (defn available-fields [table]
@@ -193,12 +193,12 @@
     [:ul.menu-list
      (->> (for [[name freq type] fields]
             (let [selected? (= name expand-field)]
-              [^{:key {:type :stream-field :name name}}
-               [stream-field table type name selected? false (/ freq total)]
+              [^{:key {:type :field :name name}}
+               [field table type name selected? false (/ freq total)]
 
                (when selected?
-                 ^{:key {:type :stream-field-values :name name}}
-                 [stream-field-values-list table name])]))
+                 ^{:key {:type :field-values :name name}}
+                 [field-values-list table name])]))
           (apply concat))]))
 
 
@@ -212,7 +212,7 @@
        (:expanded-sm ui-misc/icons)
        (:collapsed-sm ui-misc/icons))]]])
 
-(defn stream-fields [table]
+(defn fields [table]
   (let [saved-searches?   (atom true)
         used-fields?      (atom true)
         available-fields? (atom true)]

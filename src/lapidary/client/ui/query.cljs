@@ -21,7 +21,7 @@
    [taoensso.timbre :as timbre
     :refer-macros (tracef debugf infof warnf errorf)]))
 
-(defn stream-detail-value [table field value selected? set-selected column?]
+(defn detail-tag [table field value selected? set-selected column?]
   (let [type      (utils/detect-type value)
         value     (clj->js value)
         value-str (if (object? value)
@@ -53,23 +53,73 @@
             :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
            [:span.icon (:value-exclude-sm ui-misc/icons)]]]])]]))
 
-(defn stream-detail [table log columns]
+(defn detail-tags [table log columns]
   (let [selected-field (atom nil)
         set-selected   #(reset! selected-field %)]
     (fn [table log columns]
-      (let [columns        (set columns)
-            selected-field @selected-field]
+      (let [selected-field @selected-field]
+        [:div.field.is-grouped.is-grouped-multiline
+         (for [field (->> (utils/kvpaths-all log)
+                          (sort)
+                          (remove #(= % [:record])))]
+           ^{:key field}
+           [detail-tag table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]))))
+
+(defn detail-table [table log columns]
+  [:table.table.is-hoverable.is-wide
+   [:thead
+    [:tr
+     [:th]
+     [:th "Field"]
+     [:th "Value"]]]
+   [:tbody
+    (for [field (->> (utils/kvpaths-all log)
+                     (sort)
+                     (remove #(= % [:record])))]
+      (let [value     (get-in log field)
+            type      (utils/detect-type value)
+            value     (clj->js value)
+            value-str (if (object? value)
+                        (js/JSON.stringify value)
+                        (str value))]
+        ^{:key field}
+        [:tr
+         [:td
+          [:div.buttons.has-addon
+           [:a.button.is-link.is-small
+            {:title    "Copy Value"
+             :on-click #(copy value-str)}
+            [:span.icon (:value-copy-sm ui-misc/icons)]]
+           [:a.button.is-success.is-small
+            {:title    "Require Value"
+             :on-click #(rf/dispatch [:query-filter-add table :require field value])}
+            [:span.icon (:value-require-sm ui-misc/icons)]]
+           [:a.button.is-danger.is-small
+            {:title    "Exclude Value"
+             :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
+            [:span.icon (:value-exclude-sm ui-misc/icons)]]]]
+         [:td
+          [:tt (ui-misc/format-path field)]]
+         [:td
+          [:tt {:title value-str}
+           (-> (format-value/format value :auto nil)
+               (utils/shorten 120))]]]))]])
+
+(defn detail [table log columns]
+  (let [as-table? (atom false)]
+    (fn [table log columns]
+      (let [columns (set columns)]
         [:tr
          [:td.is-size-7-mobile {:col-span (-> columns count)}
-          [:div.field.is-grouped.is-grouped-multiline
-           (for [field (->> (utils/kvpaths-all log)
-                            (sort)
-                            (remove #(= % [:record])))]
-             ^{:key field}
-             [stream-detail-value table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]]]))))
+          [:button {:class    [:button :is-pulled-right	(when @as-table? :is-primary)]
+                    :on-click #(swap! as-table? not)}
+           [:span.icon.is-small (ui-misc/icons :table)]]
+          (if @as-table?
+            [detail-table table log columns]
+            [detail-tags table log columns])]]))))
 
 
-(defn stream-entry [table log columns selected? column-options]
+(defn log-table-entry [table log columns selected? column-options]
   (let [checked? (atom false)
         check-fn (fn [e]
                    (swap! checked? not)
@@ -96,7 +146,7 @@
             #_(js/console.log value)
             (format-value/format value type fmt)]))])))
 
-(defn stream-table-header-column [table column options sort? reverse? last?]
+(defn log-table-header-column [table column options sort? reverse? last?]
   (let [width (-> options (get :width 12) (str "em"))]
     [:th {:class    :is-size-7-mobile
           :on-click #(rf/dispatch (if sort?
@@ -110,7 +160,7 @@
           (:order-ascend ui-misc/icons)
           (:order-descend ui-misc/icons))])]))
 
-(defn stream-table-header [table columns]
+(defn log-table-header [table columns]
   (let [sort-column    @(rf/subscribe [:query-sort-column table])
         reverse?       @(rf/subscribe [:query-reverse? table])
         column-options @(rf/subscribe [:query-column-options-all table])
@@ -125,9 +175,9 @@
               last?   (= column (last columns))
               options (merge {:width 12} (get column-options column))]
           ^{:key column}
-          [stream-table-header-column table column options sort? reverse? last?]))]]))
+          [log-table-header-column table column options sort? reverse? last?]))]]))
 
-(defn stream-table-body [table columns]
+(defn log-table-body [table columns]
   (let [expand-log     @(rf/subscribe [:query-expand-log table])
         column-options @(rf/subscribe [:query-column-options-all table])]
     [:tbody
@@ -137,18 +187,18 @@
              selected? (= id expand-log)]
          (with-meta
            (case f
-             :entry  [stream-entry table log columns selected? column-options]
+             :entry  [log-table-entry table log columns selected? column-options]
              :record (when (= expand-log (get log ui-misc/id-column))
-                       [stream-detail table log columns]))
+                       [detail table log columns]))
            {:key {:f f :id id}})))]))
 
-(defn stream-table [table]
+(defn log-table [table]
   (let [columns @(rf/subscribe [:query-columns table])]
     [:table.table.is-hoverable.is-wide.is-fixed
-     [stream-table-header table columns]
-     [stream-table-body table columns]]))
+     [log-table-header table columns]
+     [log-table-body table columns]]))
 
-(defn stream-filter-tag [table type field value]
+(defn filter-tag [table type field value]
   (let [cmp-text (case type :require " = " :exclude " != ")
         class    (str "tag " (case type
                                :require "is-success"
@@ -160,7 +210,7 @@
       [:a.tag.is-delete
        {:on-click #(rf/dispatch [:query-filter-remove table type field value])}]]]))
 
-(defn stream-filter-tags [table]
+(defn filter-tags [table]
   (let [filters @(rf/subscribe [:query-filters table])]
     [:div.field.is-grouped.is-grouped-multiline
      (for [type [:require :exclude]]
@@ -172,7 +222,7 @@
                ^{:key {:type  type
                        :field field
                        :value (if (some? value) value 'Null)}}
-               [stream-filter-tag table type field value])))))]))
+               [filter-tag table type field value])))))]))
 
 (defn submit [table state]
   (let [{:keys [query-str start-str end-str query-parsed]} @state]
@@ -391,16 +441,16 @@
           :confirm-str confirm-search-delete}]
 
         (some? show-field)
-        [field/stream-field-dialog table]
+        [field/field-dialog table]
 
         settings-visible?
         [table-settings/dialog table])
 
       (when fields-visible?
-        [sidebar/stream-fields table])
+        [sidebar/fields table])
       [:div.column.section.is-flex {:style {:flex-direction :column}}
        [query-form table]
-       [stream-filter-tags table]
-       [stream-table table]
+       [filter-tags table]
+       [log-table table]
        [:div {:style {:margin-top :auto}}
         [pagination/pagination page #(rf/dispatch [:query-page table %]) pages]]]]]))

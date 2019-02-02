@@ -129,7 +129,8 @@
    :login-password-sm  [:i.mdi.mdi-18px.mdi-lock]
    :information        [:i.mdi.mid-24px.mdi-information-variant]
    :fields-visible     [:i.mdi.mdi-24px.mdi-format-list-bulleted]
-   :fields-hidden      [:i.mdi.mdi-24px.mdi-format-list-bulleted]})
+   :fields-hidden      [:i.mdi.mdi-24px.mdi-format-list-bulleted]
+   :table              [:i.mdi.mdi-24px.mdi-table]})
 
 (def icons icons-mdi)
 
