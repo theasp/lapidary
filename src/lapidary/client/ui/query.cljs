@@ -66,7 +66,7 @@
            [detail-tag table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]))))
 
 (defn detail-table [table log columns]
-  [:table.table.is-wide
+  [:table.table.is-wide.is-light
    [:thead
     [:tr
      [:th]
