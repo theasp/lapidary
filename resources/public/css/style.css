@@ -120,3 +120,19 @@ svg.is-color {
 .activity-vbar.is-active {
   background-color: #ff0000;
 }
+
+table.table thead tr.is-not-hoverable.is-light:not(.is-selected):hover,
+table.table.is-not-hoverable.is-light thead tr:not(.is-selected):hover,
+table.table thead tr.is-not-hoverable.is-light:not(.is-selected):hover,
+table.table.is-not-hoverable.is-light tbody tr:not(.is-selected):hover,
+table.table tbody tr.is-not-hoverable.is-light:not(.is-selected):hover {
+  background-color: #f5f5f5;
+}
+
+table.table thead tr.is-not-hoverable.is-white:not(.is-selected):hover,
+table.table.is-not-hoverable.is-white thead tr:not(.is-selected):hover,
+table.table thead tr.is-not-hoverable.is-white:not(.is-selected):hover,
+table.table.is-not-hoverable.is-white tbody tr:not(.is-selected):hover,
+table.table tbody tr.is-not-hoverable.is-white:not(.is-selected):hover {
+  background-color: #ffffff;
+}

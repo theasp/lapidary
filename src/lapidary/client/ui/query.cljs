@@ -66,7 +66,7 @@
            [detail-tag table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]))))
 
 (defn detail-table [table log columns]
-  [:table.table.is-wide.is-light
+  [:table.table.is-not-hoverable.is-wide.is-light
    [:thead
     [:tr
      [:th]
@@ -129,7 +129,7 @@
 (defn detail [table log columns]
   (let [columns       (set columns)
         detail-table? @(rf/subscribe [:query-detail-table? table])]
-    [:tr.is-light
+    [:tr.is-not-hoverable.is-light
      [:td.is-size-7-mobile {:col-span (-> columns count)}
       [:button {:class    [:button :is-pulled-right (when detail-table? :is-primary)]
                 :on-click #(rf/dispatch [:query-detail-table table (not detail-table?)])}
