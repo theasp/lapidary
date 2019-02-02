@@ -66,7 +66,7 @@
            [detail-tag table field (get-in log field) (= field selected-field) set-selected (contains? columns field)])]))))
 
 (defn detail-table [table log columns]
-  [:table.table.is-hoverable.is-wide
+  [:table.table.is-wide
    [:thead
     [:tr
      [:th]
@@ -101,7 +101,7 @@
              {:title    "Exclude Value"
               :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
              [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]
-         [:td.is-size-7-mobile.ellipsis
+         [:td.is-size-7-mobile
           [:tt (ui-misc/format-path field)]]
          [:td.is-size-7-mobile.ellipsis
           [:tt {:title value-str}
@@ -112,7 +112,7 @@
   (let [as-table? (atom false)]
     (fn [table log columns]
       (let [columns (set columns)]
-        [:tr
+        [:tr.is-light
          [:td.is-size-7-mobile {:col-span (-> columns count)}
           [:button {:class    [:button :is-pulled-right	(when @as-table? :is-primary)]
                     :on-click #(swap! as-table? not)}
