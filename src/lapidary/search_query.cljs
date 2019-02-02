@@ -46,7 +46,7 @@
   op-lt = <'<'>
   op-ge = <'>='>
   op-le = <'<='>
-  op-ne = <'!=' | '<>'>
+  op-ne = <'!=' | '<>' | 'not=' >
   op-eq = <'='>
   op-regex = <'~'>
   op-not-regex = <'!~'>
