@@ -102,7 +102,9 @@
               :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
              [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]
          [:td.is-size-7-mobile
-          [:tt (ui-misc/format-path field)]]
+          [:tt
+           [:a {:on-click #(rf/dispatch [:query-show-field table field])}
+            [:tt (ui-misc/format-path field)]]]]
          [:td.is-size-7-mobile.ellipsis
           [:tt {:title value-str}
            (-> (format-value/format value :auto nil)
