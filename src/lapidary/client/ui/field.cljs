@@ -20,12 +20,12 @@
    [:td.is-narrow {:style {:vertical-align :middle}}
     [:div.field.has-addons
      [:p.control
-      [:a.button.is-small.is-success
+      [:a.button.is-small.has-text-success
        {:title    "Require Value"
         :on-click #(rf/dispatch [:query-filter-add table :require field value])}
        [:span.icon (:value-require-sm ui-misc/icons)]]]
      [:p.control
-      [:a.button.is-small.is-danger
+      [:a.button.is-small.has-text-danger
        {:title    "Exclude Value"
         :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
        [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]

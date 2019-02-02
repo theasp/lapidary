@@ -87,17 +87,33 @@
          [:td.is-size-7-mobile
           [:div.field.has-addons
            [:div.control
-            [:button.button.is-link.is-small
+            (if (some? (get columns field))
+              [:div.control
+               [:button.button.is-small
+                {:title    "Remove Column"
+                 :on-click #(rf/dispatch [:query-column-remove table field])}
+                [:span.icon (:column-remove-sm ui-misc/icons)]]]
+              [:button.button.is-small
+               {:title    "Add Column"
+                :on-click #(rf/dispatch [:query-column-add table field])}
+               [:span.icon (:column-add-sm ui-misc/icons)]])]
+           [:div.control
+            [:button.button.is-small
+             {:title    "Show Values"
+              :on-click #(rf/dispatch [:query-show-field table field])}
+             [:span.icon (:info-sm ui-misc/icons)]]]
+           [:div.control
+            [:button.button.has-text-link.is-small
              {:title    "Copy Value"
               :on-click #(copy value-str)}
              [:span.icon (:value-copy-sm ui-misc/icons)]]]
            [:div.control
-            [:button.button.is-success.is-small
+            [:button.button.has-text-success.is-small
              {:title    "Require Value"
               :on-click #(rf/dispatch [:query-filter-add table :require field value])}
              [:span.icon (:value-require-sm ui-misc/icons)]]]
            [:div.control
-            [:button.button.is-danger.is-small
+            [:button.button.has-text-danger.is-small.is-inverted
              {:title    "Exclude Value"
               :on-click #(rf/dispatch [:query-filter-add table :exclude field value])}
              [:span.icon (:value-exclude-sm ui-misc/icons)]]]]]
